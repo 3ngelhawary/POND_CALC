@@ -1,0 +1,97 @@
+:root{
+  --bg:#0b1220;
+  --card:#121c33;
+  --line:#263657;
+  --txt:#e7eefc;
+  --muted:#a8b7d6;
+  --btn:#1f5eff;
+  --btn2:#2a3a5e;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:linear-gradient(160deg,#070c16,#0b1220 45%,#070c16);
+  color:var(--txt);
+}
+
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns: 1.05fr 0.95fr; gap:16px}
+@media(max-width:980px){ .grid{grid-template-columns:1fr} }
+
+.card{
+  background:rgba(18,28,51,.92);
+  border:1px solid rgba(38,54,87,.7);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+h1{margin:6px 0 4px;font-size:24px}
+h2{margin:10px 0 10px;font-size:16px}
+h3{margin:8px 0 10px;font-size:14px}
+p{margin:8px 0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+hr{border:0;border-top:1px solid rgba(38,54,87,.7);margin:14px 0}
+
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.inline{display:flex;gap:8px;align-items:center;color:var(--txt);font-size:13px;margin-bottom:8px}
+input,select,textarea{
+  width:100%;
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid rgba(38,54,87,.9);
+  outline:none;
+  background:#0b1428;
+  color:var(--txt);
+}
+textarea{resize:vertical}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row > *{flex:1}
+
+button{
+  border:0;
+  padding:10px 12px;
+  border-radius:12px;
+  background:var(--btn);
+  color:white;
+  cursor:pointer;
+  font-weight:700;
+}
+button:disabled{opacity:.45;cursor:not-allowed}
+#btnDownload{background:var(--btn2)}
+
+.hidden{display:none}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}
+@media(max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+
+.kpi{
+  border:1px solid rgba(38,54,87,.7);
+  border-radius:12px;
+  padding:10px;
+  background:rgba(11,20,40,.5);
+}
+.kpiTitle{font-size:11px;color:var(--muted)}
+.kpiVal{font-size:16px;font-weight:800;margin-top:6px}
+
+.box{
+  border:1px solid rgba(38,54,87,.7);
+  border-radius:12px;
+  padding:10px;
+  background:rgba(11,20,40,.35);
+}
+
+.msg{
+  margin-top:10px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(38,54,87,.7);
+  background:rgba(11,20,40,.45);
+  color:var(--muted);
+}
