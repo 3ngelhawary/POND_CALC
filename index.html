@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pond Volume & Routing Calculator</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="wrap">
+    <h1>Pond Volume & Routing Calculator</h1>
+    <p class="muted">
+      Geometry → Stage–Storage, Outlet → Stage–Discharge, then Level-Pool routing.
+    </p>
+  </header>
+
+  <main class="wrap grid">
+    <!-- LEFT: INPUTS -->
+    <section class="card">
+      <h2>1) Mode</h2>
+      <div class="row">
+        <label class="inline">
+          <input type="radio" name="mode" value="scs" checked />
+          SCS Catchment (Area + CN + Storm)
+        </label>
+      </div>
+      <div class="row">
+        <label class="inline">
+          <input type="radio" name="mode" value="inflow" />
+          Storm Flow (Hydrograph / Triangular)
+        </label>
+      </div>
+
+      <hr/>
+
+      <h2>2) Levels & Limits</h2>
+      <div class="grid2">
+        <div>
+          <label>Ground / Crest Level (EGL) (m)</label>
+          <input id="egl" type="number" step="0.01" value="10.00"/>
+        </div>
+        <div>
+          <label>Pipe Invert Level (IL) (m)</label>
+          <input id="il" type="number" step="0.01" value="8.00"/>
+        </div>
+        <div>
+          <label>Depth below IL (m) (min 0.30)</label>
+          <input id="belowIL" type="number" step="0.01" value="0.30" min="0.30"/>
+        </div>
+        <div>
+          <label>Freeboard (m)</label>
+          <input id="freeboard" type="number" step="0.01" value="0.30" min="0.00"/>
+        </div>
+        <div>
+          <label>Stage step (m)</label>
+          <input id="stageStep" type="number" step="0.01" value="0.10" min="0.01"/>
+        </div>
+        <div>
+          <label>Routing dt (minutes)</label>
+          <input id="dtMin" type="number" step="1" value="1" min="0.25"/>
+        </div>
+      </div>
+
+      <hr/>
+
+      <h2>3) Pond Geometry</h2>
+      <div class="row">
+        <label>Geometry Type</label>
+        <select id="geomType">
+          <option value="rect" selected>Rectangular (bottom L/W + side slope)</option>
+          <option value="circ">Circular (bottom radius + side slope)</option>
+          <option value="custom">Custom (stage–area table)</option>
+        </select>
+      </div>
+
+      <div id="geomRect" class="grid2">
+        <div>
+          <label>Bottom Length Lb (m)</label>
+          <input id="lb" type="number" step="0.1" value="30"/>
+        </div>
+        <div>
+          <label>Bottom Width Wb (m)</label>
+          <input id="wb" type="number" step="0.1" value="20"/>
+        </div>
+        <div>
+          <label>Side slope Z:1 (H:V)</label>
+          <input id="zRect" type="number" step="0.1" value="3"/>
+        </div>
+        <div>
+          <label>Notes</label>
+          <input type="text" value="Z=3 means 3H:1V" disabled />
+        </div>
+      </div>
+
+      <div id="geomCirc" class="grid2 hidden">
+        <div>
+          <label>Bottom Radius r0 (m)</label>
+          <input id="r0" type="number" step="0.1" value="12"/>
+        </div>
+        <div>
+          <label>Side slope Z:1 (H:V)</label>
+          <input id="zCirc" type="number" step="0.1" value="3"/>
+        </div>
+      </div>
+
+      <div id="geomCustom" class="hidden">
+        <label>Stage–Area table (Depth(m), Area(m²)) — one row per line</label>
+        <textarea id="customTable" rows="6">0.0, 200
+0.5, 260
+1.0, 330
+1.5, 410
+2.0, 500</textarea>
+        <p class="muted small">Depth measured from pond bottom.</p>
+      </div>
+
+      <hr/>
+
+      <h2>4) Outlet (Stage–Discharge)</h2>
+      <div class="grid2">
+        <div class="box">
+          <label class="inline">
+            <input id="useOrifice" type="checkbox" checked />
+            Use Orifice
+          </label>
+          <div class="grid2">
+            <div>
+              <label>Orifice Dia (m)</label>
+              <input id="orDia" type="number" step="0.01" value="0.30"/>
+            </div>
+            <div>
+              <label>Orifice Invert (m)</label>
+              <input id="orInv" type="number" step="0.01" value="8.10"/>
+            </div>
+            <div>
+              <label>Cd</label>
+              <input id="orCd" type="number" step="0.01" value="0.62"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="box">
+          <label class="inline">
+            <input id="useWeir" type="checkbox" />
+            Use Weir
+          </label>
+          <div class="grid2">
+            <div>
+              <label>Weir Crest (m)</label>
+              <input id="weirCrest" type="number" step="0.01" value="9.20"/>
+            </div>
+            <div>
+              <label>Weir Length (m)</label>
+              <input id="weirLen" type="number" step="0.01" value="2.00"/>
+            </div>
+            <div>
+              <label>Cw</label>
+              <input id="weirCw" type="number" step="0.01" value="1.70"/>
+            </div>
+          </div>
+          <p class="muted small">Using sharp-crested rectangular: Q = Cw·L·H^(3/2)</p>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div id="modeSCS">
+        <h2>5A) SCS Catchment Inputs</h2>
+        <div class="grid2">
+          <div>
+            <label>Drainage Area (ha)</label>
+            <input id="areaHa" type="number" step="0.1" value="20"/>
+          </div>
+          <div>
+            <label>Curve Number (CN)</label>
+            <input id="cn" type="number" step="1" value="85" min="30" max="98"/>
+          </div>
+          <div>
+            <label>Storm Depth P (mm)</label>
+            <input id="pmm" type="number" step="1" value="50"/>
+          </div>
+          <div>
+            <label>Storm Duration D (hours)</label>
+            <input id="durHr" type="number" step="0.25" value="3"/>
+          </div>
+          <div>
+            <label>Time of Concentration Tc (hours)</label>
+            <input id="tcHr" type="number" step="0.05" value="0.75"/>
+          </div>
+          <div>
+            <label>Triangular shape factor (Tb = k·Tp)</label>
+            <input id="kTb" type="number" step="0.1" value="2.67" min="1.5" />
+          </div>
+        </div>
+        <p class="muted small">
+          Runoff depth computed by NRCS CN. Inflow hydrograph is triangular and volume-matched.
+        </p>
+      </div>
+
+      <div id="modeInflow" class="hidden">
+        <h2>5B) Storm Flow Inputs</h2>
+        <div class="row">
+          <label>Inflow type</label>
+          <select id="inflowType">
+            <option value="tri" selected>Triangular (Qp, Tp, Tb)</option>
+            <option value="csv">CSV Hydrograph (t(min), Q(m³/s))</option>
+          </select>
+        </div>
+
+        <div id="inflowTri" class="grid2">
+          <div>
+            <label>Peak inflow Qp (m³/s)</label>
+            <input id="qp" type="number" step="0.01" value="1.20"/>
+          </div>
+          <div>
+            <label>Time to peak Tp (minutes)</label>
+            <input id="tpMin" type="number" step="1" value="45"/>
+          </div>
+          <div>
+            <label>Base duration Tb (minutes)</label>
+            <input id="tbMin" type="number" step="1" value="180"/>
+          </div>
+        </div>
+
+        <div id="inflowCsv" class="hidden">
+          <label>Paste CSV lines: t(min),Q(m³/s)</label>
+          <textarea id="csvText" rows="6">0,0
+15,0.3
+30,0.8
+45,1.2
+60,0.9
+90,0.4
+120,0</textarea>
+          <div class="row">
+            <button id="btnLoadExample" type="button">Load Example</button>
+          </div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div class="row">
+        <button id="btnRun" type="button">RUN CALCULATION</button>
+        <button id="btnDownload" type="button" disabled>Download Stage Tables (CSV)</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+    </section>
+
+    <!-- RIGHT: OUTPUTS -->
+    <section class="card">
+      <h2>Results</h2>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpiTitle">Pond Bottom (m)</div>
+          <div id="kpiBottom" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Max WL (HWLmax) (m)</div>
+          <div id="kpiHWL" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Max Routed WL (m)</div>
+          <div id="kpiMaxWL" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Freeboard OK?</div>
+          <div id="kpiFB" class="kpiVal">–</div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpiTitle">Total Storage @ HWLmax (m³)</div>
+          <div id="kpiVtot" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Storage Below IL (m³)</div>
+          <div id="kpiVbelow" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Storage IL→HWLmax (m³)</div>
+          <div id="kpiVactive" class="kpiVal">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiTitle">Peak Outflow (m³/s)</div>
+          <div id="kpiQout" class="kpiVal">–</div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <h3>Hydrographs</h3>
+      <canvas id="chartHydro" height="120"></canvas>
+
+      <hr/>
+
+      <h3>Stage Curves</h3>
+      <canvas id="chartStage" height="120"></canvas>
+
+      <p class="muted small">
+        Notes: Orifice uses Q = Cd·A·√(2gH). Weir uses Q = Cw·L·H^(3/2). Routing is level-pool.
+      </p>
+    </section>
+  </main>
+
+  <footer class="wrap muted small">
+    Built for GitHub Pages • Units: m, m², m³, m³/s, minutes/hours
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
