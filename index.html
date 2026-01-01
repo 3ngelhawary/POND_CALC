@@ -24,6 +24,10 @@
     .kpi .t{font-size:11px;color:#a8b7d6}
     .kpi .v{font-size:16px;font-weight:900;margin-top:6px}
     .msg{margin-top:10px;padding:10px;border-radius:12px;border:1px solid #263657;background:#0b1428;color:#a8b7d6}
+
+    /* PASS/FAIL COLORS */
+    .pass{color:#00e676;}
+    .fail{color:#ff5252;}
   </style>
 </head>
 <body>
@@ -166,13 +170,10 @@
   </div>
 
 <script>
-  const g = 9.81;
-
   const $ = id => document.getElementById(id);
   const fmt = (x,d=2)=> (isFinite(x)? Number(x).toFixed(d):"–");
 
   function scsRunoffMm(Pmm, CN){
-    // S (inches) = 1000/CN - 10 ; Ia = 0.2S
     const S_in = (1000/CN) - 10;
     const S_mm = S_in * 25.4;
     const Ia = 0.2 * S_mm;
@@ -181,12 +182,10 @@
   }
 
   function pondVolumeRect(Lb, Wb, Z, H){
-    // V(H) = Lb*Wb*H + Z*(Lb+Wb)*H^2 + (4/3)*Z^2*H^3
     return (Lb*Wb*H) + (Z*(Lb+Wb)*H*H) + ((4/3)*Z*Z*H*H*H);
   }
 
   function pondVolumeCirc(r0, Z, H){
-    // V(H)=π[r0^2 H + r0 Z H^2 + (Z^2/3) H^3]
     return Math.PI*(r0*r0*H + r0*Z*H*H + (Z*Z/3)*H*H*H);
   }
 
@@ -200,6 +199,12 @@
     const s = $("shape").value;
     $("rectBox").style.display = (s==="rect") ? "grid" : "none";
     $("circBox").style.display = (s==="circ") ? "grid" : "none";
+  }
+
+  function setPassColor(isPass){
+    const el = $("kPass");
+    el.classList.remove("pass","fail");
+    el.classList.add(isPass ? "pass" : "fail");
   }
 
   function calc(){
@@ -233,7 +238,7 @@
         Vtot = pondVolumeCirc(r0, Z, H);
       }
 
-      // Storage below IL (if IL above bottom)
+      // Storage below IL
       const Hbelow = Math.max(0, il - bottom);
       let Vbelow = 0;
       if(Hbelow>0){
@@ -257,10 +262,10 @@
         const loss = Number($("lossPct").value || 0);
         if(!(areaHa>0 && cn>=30 && cn<=98 && pmm>=0)) throw new Error("Check SCS inputs.");
 
-        const qmm = scsRunoffMm(pmm, cn);                 // runoff depth
+        const qmm = scsRunoffMm(pmm, cn);
         const areaM2 = areaHa * 10000;
-        Vreq = (qmm/1000) * areaM2;                       // runoff volume
-        Vreq *= (1 - Math.min(Math.max(loss,0),50)/100);  // optional loss
+        Vreq = (qmm/1000) * areaM2;
+        Vreq *= (1 - Math.min(Math.max(loss,0),50)/100);
         note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm`;
       } else {
         const Qp = Number($("qp").value);
@@ -269,7 +274,6 @@
         const loss = Number($("lossPct2").value || 0);
         if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs (Tb ≥ Tp).");
 
-        // Triangular volume = 0.5 * Qp * TbSeconds
         Vreq = 0.5 * Qp * (Tb*60);
         Vreq *= (1 - Math.min(Math.max(loss,0),50)/100);
         note = `Triangular inflow volume from Qp & Tb`;
@@ -288,6 +292,8 @@
 
       $("kVreq").textContent   = fmt(Vreq,0);
       $("kPass").textContent   = pass ? "PASS" : "FAIL";
+      setPassColor(pass);
+
       $("kNote").textContent   = note;
 
       $("msg").textContent = pass
@@ -296,6 +302,8 @@
 
     } catch(e){
       $("msg").textContent = e.message || String(e);
+      $("kPass").textContent = "–";
+      $("kPass").classList.remove("pass","fail");
     }
   }
 
