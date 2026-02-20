@@ -1,3 +1,4 @@
+<!-- File: index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -33,7 +34,7 @@
 <body>
   <div class="wrap">
     <h1>Pond Volume Calculator (Simple)</h1>
-    <p class="muted">Computes pond storage from levels + geometry and checks against required volume (SCS or inflow).</p>
+    <p class="muted">Computes pond storage from levels + geometry and checks against required volume (SCS, inflow, or direct volume).</p>
 
     <div class="card">
       <h2>1) Choose Required Volume Method</h2>
@@ -42,6 +43,7 @@
         <select id="mode">
           <option value="scs" selected>SCS Runoff Volume (Area + CN + Storm Depth)</option>
           <option value="inflow">Storm Inflow Volume (Triangular Qp/Tp/Tb)</option>
+          <option value="vol">Direct Stormwater Volume (User Input m³)</option>
         </select>
       </div>
 
@@ -80,6 +82,17 @@
         <div>
           <label>Loss factor (optional, %)</label>
           <input id="lossPct2" type="number" step="1" value="0" min="0" max="50">
+        </div>
+      </div>
+
+      <div id="volBox" class="grid2" style="display:none">
+        <div>
+          <label>Required Stormwater Volume (m³)</label>
+          <input id="vreqUser" type="number" step="1" value="500" min="0">
+        </div>
+        <div>
+          <label>Loss factor (optional, %)</label>
+          <input id="lossPct3" type="number" step="1" value="0" min="0" max="50">
         </div>
       </div>
     </div>
@@ -191,8 +204,9 @@
 
   function toggleMode(){
     const m = $("mode").value;
-    $("scsBox").style.display = (m==="scs") ? "grid" : "none";
+    $("scsBox").style.display    = (m==="scs") ? "grid" : "none";
     $("inflowBox").style.display = (m==="inflow") ? "grid" : "none";
+    $("volBox").style.display    = (m==="vol") ? "grid" : "none";
   }
 
   function toggleShape(){
@@ -206,6 +220,8 @@
     el.classList.remove("pass","fail");
     el.classList.add(isPass ? "pass" : "fail");
   }
+
+  function clampPct(x){ return Math.min(Math.max(x,0),50); }
 
   function calc(){
     try{
@@ -259,24 +275,32 @@
         const areaHa = Number($("areaHa").value);
         const cn = Number($("cn").value);
         const pmm = Number($("pmm").value);
-        const loss = Number($("lossPct").value || 0);
+        const loss = clampPct(Number($("lossPct").value || 0));
         if(!(areaHa>0 && cn>=30 && cn<=98 && pmm>=0)) throw new Error("Check SCS inputs.");
 
         const qmm = scsRunoffMm(pmm, cn);
         const areaM2 = areaHa * 10000;
         Vreq = (qmm/1000) * areaM2;
-        Vreq *= (1 - Math.min(Math.max(loss,0),50)/100);
+        Vreq *= (1 - loss/100);
         note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm`;
-      } else {
+      }
+      else if(mode==="inflow"){
         const Qp = Number($("qp").value);
         const Tp = Number($("tp").value);
         const Tb = Number($("tb").value);
-        const loss = Number($("lossPct2").value || 0);
+        const loss = clampPct(Number($("lossPct2").value || 0));
         if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs (Tb ≥ Tp).");
 
         Vreq = 0.5 * Qp * (Tb*60);
-        Vreq *= (1 - Math.min(Math.max(loss,0),50)/100);
+        Vreq *= (1 - loss/100);
         note = `Triangular inflow volume from Qp & Tb`;
+      }
+      else {
+        const vuser = Number($("vreqUser").value);
+        const loss = clampPct(Number($("lossPct3").value || 0));
+        if(!(vuser>=0)) throw new Error("Enter a valid required volume (m³).");
+        Vreq = vuser * (1 - loss/100);
+        note = `Direct required volume (after loss)`;
       }
 
       const pass = (Vtot >= Vreq);
