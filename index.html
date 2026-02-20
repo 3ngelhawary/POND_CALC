@@ -32,36 +32,126 @@
 <body>
   <div class="wrap">
     <h1>Pond Volume Calculator (Simple)</h1>
+    <p class="muted">Computes pond storage from levels + geometry and checks against required volume (SCS, inflow, or direct volume). Also shows upper (top) dimensions at Max WL.</p>
 
     <div class="card">
-      <h2>Levels</h2>
-      <div class="grid2">
-        <div><label>EGL (m)</label><input id="egl" type="number" step="0.01" value="10.00"></div>
-        <div><label>IL (m)</label><input id="il" type="number" step="0.01" value="8.00"></div>
-        <div><label>Depth below IL (m)</label><input id="belowIL" type="number" step="0.01" value="0.30"></div>
-        <div><label>Freeboard (m)</label><input id="fb" type="number" step="0.01" value="0.30"></div>
+      <h2>1) Choose Required Volume Method</h2>
+      <div class="row">
+        <label style="flex:2">Method</label>
+        <select id="mode">
+          <option value="scs" selected>SCS Runoff Volume (Area + CN + Storm Depth)</option>
+          <option value="inflow">Storm Inflow Volume (Triangular Qp/Tp/Tb)</option>
+          <option value="vol">Direct Stormwater Volume (User Input m³)</option>
+        </select>
+      </div>
+
+      <div id="scsBox" class="grid2">
+        <div>
+          <label>Drainage Area (ha)</label>
+          <input id="areaHa" type="number" step="0.1" value="20">
+        </div>
+        <div>
+          <label>Curve Number (CN)</label>
+          <input id="cn" type="number" step="1" value="85" min="30" max="98">
+        </div>
+        <div>
+          <label>Storm Depth P (mm)</label>
+          <input id="pmm" type="number" step="1" value="50" min="0">
+        </div>
+        <div>
+          <label>Loss factor (optional, %)</label>
+          <input id="lossPct" type="number" step="1" value="0" min="0" max="50">
+        </div>
+      </div>
+
+      <div id="inflowBox" class="grid2" style="display:none">
+        <div>
+          <label>Peak inflow Qp (m³/s)</label>
+          <input id="qp" type="number" step="0.01" value="1.2" min="0">
+        </div>
+        <div>
+          <label>Time to peak Tp (min)</label>
+          <input id="tp" type="number" step="1" value="45" min="1">
+        </div>
+        <div>
+          <label>Base duration Tb (min)</label>
+          <input id="tb" type="number" step="1" value="180" min="1">
+        </div>
+        <div>
+          <label>Loss factor (optional, %)</label>
+          <input id="lossPct2" type="number" step="1" value="0" min="0" max="50">
+        </div>
+      </div>
+
+      <div id="volBox" class="grid2" style="display:none">
+        <div>
+          <label>Required Stormwater Volume (m³)</label>
+          <input id="vreqUser" type="number" step="1" value="500" min="0">
+        </div>
+        <div>
+          <label>Loss factor (optional, %)</label>
+          <input id="lossPct3" type="number" step="1" value="0" min="0" max="50">
+        </div>
       </div>
     </div>
 
     <div class="card">
-      <h2>Geometry</h2>
+      <h2>2) Levels (Your Rules)</h2>
+      <div class="grid2">
+        <div>
+          <label>Ground / Crest Level (EGL) (m)</label>
+          <input id="egl" type="number" step="0.01" value="10.00">
+        </div>
+        <div>
+          <label>Pipe Invert Level (IL) (m)</label>
+          <input id="il" type="number" step="0.01" value="8.00">
+        </div>
+        <div>
+          <label>Depth below IL (m) (min 0.30)</label>
+          <input id="belowIL" type="number" step="0.01" value="0.30" min="0.30">
+        </div>
+        <div>
+          <label>Freeboard (m)</label>
+          <input id="fb" type="number" step="0.01" value="0.30" min="0">
+        </div>
+      </div>
+      <p class="muted">Bottom = IL − depthBelowIL. Max WL = EGL − freeboard.</p>
+    </div>
+
+    <div class="card">
+      <h2>3) Pond Geometry (Simple)</h2>
       <div class="row">
         <label style="flex:2">Shape</label>
         <select id="shape">
-          <option value="rect" selected>Rectangular</option>
-          <option value="circ">Circular</option>
+          <option value="rect" selected>Rectangular (Lb, Wb, side slope Z:1)</option>
+          <option value="circ">Circular (r0, side slope Z:1)</option>
         </select>
       </div>
 
       <div id="rectBox" class="grid2">
-        <div><label>Bottom Length Lb (m)</label><input id="lb" type="number" value="30"></div>
-        <div><label>Bottom Width Wb (m)</label><input id="wb" type="number" value="20"></div>
-        <div><label>Side slope Z:1</label><input id="z" type="number" value="3"></div>
+        <div>
+          <label>Bottom Length Lb (m)</label>
+          <input id="lb" type="number" step="0.1" value="30" min="0.1">
+        </div>
+        <div>
+          <label>Bottom Width Wb (m)</label>
+          <input id="wb" type="number" step="0.1" value="20" min="0.1">
+        </div>
+        <div>
+          <label>Side slope Z:1 (H:V)</label>
+          <input id="z" type="number" step="0.1" value="3" min="0">
+        </div>
       </div>
 
       <div id="circBox" class="grid2" style="display:none">
-        <div><label>Bottom Radius r0 (m)</label><input id="r0" type="number" value="12"></div>
-        <div><label>Side slope Z:1</label><input id="zc" type="number" value="3"></div>
+        <div>
+          <label>Bottom Radius r0 (m)</label>
+          <input id="r0" type="number" step="0.1" value="12" min="0.1">
+        </div>
+        <div>
+          <label>Side slope Z:1 (H:V)</label>
+          <input id="zc" type="number" step="0.1" value="3" min="0">
+        </div>
       </div>
 
       <div class="row" style="margin-top:10px">
@@ -72,75 +162,203 @@
 
       <div class="kpis">
         <div class="kpi"><div class="t">Pond Bottom (m)</div><div id="kBottom" class="v">–</div></div>
-        <div class="kpi"><div class="t">Max WL (m)</div><div id="kMaxWL" class="v">–</div></div>
-        <div class="kpi"><div class="t">Depth (m)</div><div id="kDepth" class="v">–</div></div>
+        <div class="kpi"><div class="t">Max Water Level (m)</div><div id="kMaxWL" class="v">–</div></div>
+        <div class="kpi"><div class="t">Available Depth (m)</div><div id="kDepth" class="v">–</div></div>
 
         <div class="kpi"><div class="t">Upper Length @ Max WL (m)</div><div id="kTopL" class="v">–</div></div>
         <div class="kpi"><div class="t">Upper Width @ Max WL (m)</div><div id="kTopW" class="v">–</div></div>
-        <div class="kpi"><div class="t">Upper Diameter (Circular) (m)</div><div id="kTopD" class="v">–</div></div>
+        <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
+
+        <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
+        <div class="kpi"><div class="t">Storage Below IL (m³)</div><div id="kVbelow" class="v">–</div></div>
+        <div class="kpi"><div class="t">Storage IL → Max WL (m³)</div><div id="kVactive" class="v">–</div></div>
+
+        <div class="kpi"><div class="t">Required Volume (m³)</div><div id="kVreq" class="v">–</div></div>
+        <div class="kpi"><div class="t">Storage Check</div><div id="kPass" class="v">–</div></div>
+        <div class="kpi"><div class="t">Runoff/ Inflow Note</div><div id="kNote" class="v">–</div></div>
       </div>
     </div>
+
+    <p class="muted" style="font-size:12px">
+      Units: m, m³. SCS runoff uses NRCS CN method (Ia = 0.2S). Inflow volume uses triangular area.
+      Top dimensions use: Ltop = Lb + 2·Z·H, Wtop = Wb + 2·Z·H, Dtop = 2·(r0 + Z·H).
+    </p>
   </div>
 
 <script>
-const $ = id => document.getElementById(id);
-const fmt = (x,d=2)=> (isFinite(x)? Number(x).toFixed(d):"–");
+  const $ = id => document.getElementById(id);
+  const fmt = (x,d=2)=> (isFinite(x)? Number(x).toFixed(d):"–");
 
-function toggleShape(){
-  const s = $("shape").value;
-  $("rectBox").style.display = (s==="rect") ? "grid" : "none";
-  $("circBox").style.display = (s==="circ") ? "grid" : "none";
-}
-
-function calc(){
-  try{
-    const egl = Number($("egl").value);
-    const il  = Number($("il").value);
-    const below = Math.max(Number($("belowIL").value),0.30);
-    const fb  = Number($("fb").value);
-
-    const bottom = il - below;
-    const maxWL  = egl - fb;
-    const H = maxWL - bottom;
-    if(!(H>0)) throw new Error("Invalid levels.");
-
-    $("kBottom").textContent = fmt(bottom);
-    $("kMaxWL").textContent = fmt(maxWL);
-    $("kDepth").textContent = fmt(H);
-
-    if($("shape").value==="rect"){
-      const Lb = Number($("lb").value);
-      const Wb = Number($("wb").value);
-      const Z  = Number($("z").value);
-
-      const topL = Lb + 2*Z*H;
-      const topW = Wb + 2*Z*H;
-
-      $("kTopL").textContent = fmt(topL);
-      $("kTopW").textContent = fmt(topW);
-      $("kTopD").textContent = "–";
-    } else {
-      const r0 = Number($("r0").value);
-      const Z  = Number($("zc").value);
-
-      const rTop = r0 + Z*H;
-      const dTop = 2*rTop;
-
-      $("kTopL").textContent = "–";
-      $("kTopW").textContent = "–";
-      $("kTopD").textContent = fmt(dTop);
-    }
-
-    $("msg").textContent = "Calculation completed.";
-
-  }catch(e){
-    $("msg").textContent = e.message;
+  function scsRunoffMm(Pmm, CN){
+    const S_in = (1000/CN) - 10;
+    const S_mm = S_in * 25.4;
+    const Ia = 0.2 * S_mm;
+    if(Pmm <= Ia) return 0;
+    return Math.max(0, ((Pmm - Ia)**2) / (Pmm + 0.8*S_mm));
   }
-}
 
-$("shape").addEventListener("change", toggleShape);
-$("run").addEventListener("click", calc);
-toggleShape();
+  function pondVolumeRect(Lb, Wb, Z, H){
+    return (Lb*Wb*H) + (Z*(Lb+Wb)*H*H) + ((4/3)*Z*Z*H*H*H);
+  }
+
+  function pondVolumeCirc(r0, Z, H){
+    return Math.PI*(r0*r0*H + r0*Z*H*H + (Z*Z/3)*H*H*H);
+  }
+
+  function toggleMode(){
+    const m = $("mode").value;
+    $("scsBox").style.display    = (m==="scs") ? "grid" : "none";
+    $("inflowBox").style.display = (m==="inflow") ? "grid" : "none";
+    $("volBox").style.display    = (m==="vol") ? "grid" : "none";
+  }
+
+  function toggleShape(){
+    const s = $("shape").value;
+    $("rectBox").style.display = (s==="rect") ? "grid" : "none";
+    $("circBox").style.display = (s==="circ") ? "grid" : "none";
+  }
+
+  function setPassColor(isPass){
+    const el = $("kPass");
+    el.classList.remove("pass","fail");
+    el.classList.add(isPass ? "pass" : "fail");
+  }
+
+  function clampPct(x){ return Math.min(Math.max(x,0),50); }
+
+  function calc(){
+    try{
+      // Levels
+      const egl = Number($("egl").value);
+      const il  = Number($("il").value);
+      let below = Number($("belowIL").value);
+      const fb  = Number($("fb").value);
+
+      if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)) throw new Error("Check levels inputs.");
+      if(below < 0.30) below = 0.30;
+      $("belowIL").value = below.toFixed(2);
+
+      const bottom = il - below;
+      const maxWL  = egl - fb;
+      const H = maxWL - bottom;
+      if(!(H>0)) throw new Error("Invalid: (EGL - FB) must be above (IL - below).");
+
+      // Storage total
+      const shape = $("shape").value;
+      let Vtot = 0;
+
+      // Top dimensions
+      let topL = NaN, topW = NaN, topD = NaN;
+
+      if(shape==="rect"){
+        const Lb = Number($("lb").value), Wb = Number($("wb").value), Z = Number($("z").value);
+        if(!(Lb>0 && Wb>0 && Z>=0)) throw new Error("Check rectangular geometry inputs.");
+
+        Vtot = pondVolumeRect(Lb, Wb, Z, H);
+
+        topL = Lb + 2*Z*H;
+        topW = Wb + 2*Z*H;
+        topD = NaN;
+      } else {
+        const r0 = Number($("r0").value), Z = Number($("zc").value);
+        if(!(r0>0 && Z>=0)) throw new Error("Check circular geometry inputs.");
+
+        Vtot = pondVolumeCirc(r0, Z, H);
+
+        const rTop = r0 + Z*H;
+        topD = 2*rTop;
+        topL = NaN;
+        topW = NaN;
+      }
+
+      // Storage below IL
+      const Hbelow = Math.max(0, il - bottom);
+      let Vbelow = 0;
+      if(Hbelow > 0){
+        const hUse = Math.min(Hbelow, H);
+        if(shape==="rect"){
+          Vbelow = pondVolumeRect(Number($("lb").value), Number($("wb").value), Number($("z").value), hUse);
+        } else {
+          Vbelow = pondVolumeCirc(Number($("r0").value), Number($("zc").value), hUse);
+        }
+      }
+      const Vactive = Math.max(0, Vtot - Vbelow);
+
+      // Required volume
+      const mode = $("mode").value;
+      let Vreq = 0;
+      let note = "";
+
+      if(mode==="scs"){
+        const areaHa = Number($("areaHa").value);
+        const cn = Number($("cn").value);
+        const pmm = Number($("pmm").value);
+        const loss = clampPct(Number($("lossPct").value || 0));
+        if(!(areaHa>0 && cn>=30 && cn<=98 && pmm>=0)) throw new Error("Check SCS inputs.");
+
+        const qmm = scsRunoffMm(pmm, cn);
+        const areaM2 = areaHa * 10000;
+        Vreq = (qmm/1000) * areaM2;
+        Vreq *= (1 - loss/100);
+        note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm`;
+      }
+      else if(mode==="inflow"){
+        const Qp = Number($("qp").value);
+        const Tp = Number($("tp").value);
+        const Tb = Number($("tb").value);
+        const loss = clampPct(Number($("lossPct2").value || 0));
+        if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs (Tb ≥ Tp).");
+
+        Vreq = 0.5 * Qp * (Tb*60);
+        Vreq *= (1 - loss/100);
+        note = `Triangular inflow volume from Qp & Tb`;
+      }
+      else {
+        const vuser = Number($("vreqUser").value);
+        const loss = clampPct(Number($("lossPct3").value || 0));
+        if(!(vuser>=0)) throw new Error("Enter a valid required volume (m³).");
+        Vreq = vuser * (1 - loss/100);
+        note = `Direct required volume (after loss)`;
+      }
+
+      const pass = (Vtot >= Vreq);
+
+      // KPIs
+      $("kBottom").textContent = fmt(bottom,2);
+      $("kMaxWL").textContent = fmt(maxWL,2);
+      $("kDepth").textContent  = fmt(H,2);
+
+      $("kTopL").textContent = isFinite(topL) ? fmt(topL,2) : "–";
+      $("kTopW").textContent = isFinite(topW) ? fmt(topW,2) : "–";
+      $("kTopD").textContent = isFinite(topD) ? fmt(topD,2) : "–";
+
+      $("kVtot").textContent   = fmt(Vtot,0);
+      $("kVbelow").textContent = fmt(Vbelow,0);
+      $("kVactive").textContent= fmt(Vactive,0);
+
+      $("kVreq").textContent   = fmt(Vreq,0);
+      $("kPass").textContent   = pass ? "PASS" : "FAIL";
+      setPassColor(pass);
+
+      $("kNote").textContent   = note;
+
+      $("msg").textContent = pass
+        ? "PASS: Pond storage at max WL is ≥ required volume."
+        : "FAIL: Increase pond size/depth or revise assumptions.";
+
+    } catch(e){
+      $("msg").textContent = e.message || String(e);
+      $("kPass").textContent = "–";
+      $("kPass").classList.remove("pass","fail");
+    }
+  }
+
+  $("mode").addEventListener("change", toggleMode);
+  $("shape").addEventListener("change", toggleShape);
+  $("run").addEventListener("click", calc);
+
+  toggleMode();
+  toggleShape();
 </script>
 </body>
 </html>
