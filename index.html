@@ -4,195 +4,394 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pond Volume Calculator (Simple)</title>
+  <title>Pond Volume Calculator</title>
+
   <style>
-    body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#0b1220;color:#e7eefc}
-    .wrap{max-width:980px;margin:0 auto;padding:18px}
-    .card{background:#121c33;border:1px solid #263657;border-radius:14px;padding:16px;margin-bottom:14px}
-    h1{margin:6px 0 2px;font-size:22px}
-    h2{margin:10px 0 10px;font-size:15px}
-    .muted{color:#a8b7d6}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:760px){.grid2{grid-template-columns:1fr}}
-    label{display:block;font-size:12px;color:#a8b7d6;margin:6px 0}
-    input,select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid #263657;background:#0b1428;color:#e7eefc}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .row>*{flex:1}
-    button{border:0;padding:10px 12px;border-radius:12px;background:#1f5eff;color:white;font-weight:800;cursor:pointer}
-    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    @media(max-width:760px){.kpis{grid-template-columns:1fr}}
-    .kpi{border:1px solid #263657;border-radius:12px;padding:10px;background:#0b1428}
-    .kpi .t{font-size:11px;color:#a8b7d6}
+    :root{
+      --bg:#0b1220;
+      --card:rgba(18,28,51,.92);
+      --line:rgba(38,54,87,.75);
+      --txt:#e7eefc;
+      --muted:#a8b7d6;
+      --btn:#1f5eff;
+      --btn2:#2a3a5e;
+      --good:#00e676;
+      --bad:#ff5252;
+      --shadow:0 12px 35px rgba(0,0,0,.28);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,Segoe UI,Roboto,Arial;
+      background:radial-gradient(1200px 600px at 20% 0%, rgba(31,94,255,.18), transparent 60%),
+                 radial-gradient(900px 500px at 90% 10%, rgba(0,230,118,.10), transparent 55%),
+                 linear-gradient(160deg,#070c16,#0b1220 45%,#070c16);
+      color:var(--txt);
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .title{
+      display:flex;flex-direction:column;gap:6px;
+    }
+    h1{margin:0;font-size:26px;letter-spacing:.2px}
+    .subtitle{margin:0;color:var(--muted);max-width:760px;line-height:1.35}
+    .pillrow{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{
+      font-size:12px;color:var(--muted);
+      border:1px solid var(--line);
+      background:rgba(11,20,40,.35);
+      padding:6px 10px;border-radius:999px;
+    }
+
+    .grid{display:grid;grid-template-columns: 1.05fr 0.95fr; gap:16px}
+    @media(max-width:980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    .card h2{margin:0 0 10px;font-size:15px;letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .hr{height:1px;background:var(--line);margin:14px 0;opacity:.75}
+
+    label{display:block;font-size:12px;color:var(--muted);margin:6px 0}
+    input,select{
+      width:100%;
+      padding:10px 11px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      outline:none;
+      background:#0b1428;
+      color:var(--txt);
+    }
+    input:focus,select:focus{border-color:rgba(31,94,255,.85); box-shadow:0 0 0 3px rgba(31,94,255,.18)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+    @media(max-width:520px){ .grid2{grid-template-columns:1fr} }
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row > *{flex:1}
+
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    button{
+      border:0;
+      padding:11px 13px;
+      border-radius:14px;
+      background:var(--btn);
+      color:white;
+      cursor:pointer;
+      font-weight:800;
+      box-shadow:0 10px 22px rgba(31,94,255,.20);
+    }
+    button:hover{filter:brightness(1.05)}
+    #btnReset{background:var(--btn2);box-shadow:none}
+
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(11,20,40,.45);
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+    @media(max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:520px){ .kpis{grid-template-columns:1fr} }
+
+    .kpi{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(11,20,40,.35);
+    }
+    .kpi .t{font-size:11px;color:var(--muted)}
     .kpi .v{font-size:16px;font-weight:900;margin-top:6px}
-    .msg{margin-top:10px;padding:10px;border-radius:12px;border:1px solid #263657;background:#0b1428;color:#a8b7d6}
-    .pass{color:#00e676;}
-    .fail{color:#ff5252;}
+    .pass{color:var(--good)}
+    .fail{color:var(--bad)}
+
+    .splitHead{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    }
+    .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:rgba(11,20,40,.35);
+    }
+
+    /* Sketch */
+    .sketchWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(11,20,40,.35);
+      padding:10px;
+      overflow:hidden;
+    }
+    .sketchNote{margin:8px 0 0;color:var(--muted);font-size:12px}
+    svg{width:100%;height:auto;display:block}
+    .svgtxt{font-family:system-ui,Segoe UI,Roboto,Arial}
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <h1>Pond Volume Calculator (Simple)</h1>
-    <p class="muted">User enters UPPER dimensions at Max WL. Calculator computes LOWER (bottom) dimensions from side slope and depth and shows them in summary.</p>
-
-    <div class="card">
-      <h2>1) Choose Required Volume Method</h2>
-      <div class="row">
-        <label style="flex:2">Method</label>
-        <select id="mode">
-          <option value="scs" selected>SCS Runoff Volume (Area + CN + Storm Depth)</option>
-          <option value="inflow">Storm Inflow Volume (Triangular Qp/Tp/Tb)</option>
-          <option value="vol">Direct Stormwater Volume (User Input m³)</option>
-        </select>
-      </div>
-
-      <div id="scsBox" class="grid2">
-        <div>
-          <label>Drainage Area (ha)</label>
-          <input id="areaHa" type="number" step="0.1" value="20">
-        </div>
-        <div>
-          <label>Curve Number (CN)</label>
-          <input id="cn" type="number" step="1" value="85" min="30" max="98">
-        </div>
-        <div>
-          <label>Storm Depth P (mm)</label>
-          <input id="pmm" type="number" step="1" value="50" min="0">
-        </div>
-        <div>
-          <label>Loss factor (optional, %)</label>
-          <input id="lossPct" type="number" step="1" value="0" min="0" max="50">
+    <div class="topbar">
+      <div class="title">
+        <h1>Pond Volume Calculator</h1>
+        <p class="subtitle">
+          Enter <b>upper pond dimensions at Max WL</b>. The calculator derives <b>lower (bottom) dimensions</b> using side slope and depth,
+          then checks storage against required stormwater volume (SCS / inflow / direct volume). Includes a quick sketch of levels and geometry.
+        </p>
+        <div class="pillrow">
+          <span class="pill">Upper dims → bottom dims</span>
+          <span class="pill">SCS CN runoff volume</span>
+          <span class="pill">Triangular inflow volume</span>
+          <span class="pill">Direct required volume</span>
         </div>
       </div>
-
-      <div id="inflowBox" class="grid2" style="display:none">
-        <div>
-          <label>Peak inflow Qp (m³/s)</label>
-          <input id="qp" type="number" step="0.01" value="1.2" min="0">
-        </div>
-        <div>
-          <label>Time to peak Tp (min)</label>
-          <input id="tp" type="number" step="1" value="45" min="1">
-        </div>
-        <div>
-          <label>Base duration Tb (min)</label>
-          <input id="tb" type="number" step="1" value="180" min="1">
-        </div>
-        <div>
-          <label>Loss factor (optional, %)</label>
-          <input id="lossPct2" type="number" step="1" value="0" min="0" max="50">
-        </div>
-      </div>
-
-      <div id="volBox" class="grid2" style="display:none">
-        <div>
-          <label>Required Stormwater Volume (m³)</label>
-          <input id="vreqUser" type="number" step="1" value="500" min="0">
-        </div>
-        <div>
-          <label>Loss factor (optional, %)</label>
-          <input id="lossPct3" type="number" step="1" value="0" min="0" max="50">
-        </div>
+      <div class="pillrow">
+        <span class="pill">Units: m, m³</span>
+        <span class="pill">Side slope Z:1 (H:V)</span>
       </div>
     </div>
 
-    <div class="card">
-      <h2>2) Levels (Your Rules)</h2>
-      <div class="grid2">
-        <div>
-          <label>Ground / Crest Level (EGL) (m)</label>
-          <input id="egl" type="number" step="0.01" value="10.00">
+    <div class="grid">
+      <!-- LEFT: INPUTS -->
+      <div class="card">
+        <div class="splitHead">
+          <h2>Inputs</h2>
+          <span class="tag">Upper Dimensions Mode</span>
         </div>
-        <div>
-          <label>Pipe Invert Level (IL) (m)</label>
-          <input id="il" type="number" step="0.01" value="8.00">
+
+        <div class="hr"></div>
+
+        <h2>1) Required Volume Method</h2>
+        <div class="row">
+          <div style="flex:2">
+            <label>Method</label>
+            <select id="mode">
+              <option value="scs" selected>SCS Runoff Volume (Area + CN + Storm Depth)</option>
+              <option value="inflow">Storm Inflow Volume (Triangular Qp/Tp/Tb)</option>
+              <option value="vol">Direct Stormwater Volume (User Input m³)</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label>Depth below IL (m) (min 0.30)</label>
-          <input id="belowIL" type="number" step="0.01" value="0.30" min="0.30">
+
+        <div id="scsBox" class="grid2">
+          <div>
+            <label>Drainage Area (ha)</label>
+            <input id="areaHa" type="number" step="0.1" value="20" min="0.01">
+          </div>
+          <div>
+            <label>Curve Number (CN)</label>
+            <input id="cn" type="number" step="1" value="85" min="30" max="98">
+          </div>
+          <div>
+            <label>Storm Depth P (mm)</label>
+            <input id="pmm" type="number" step="1" value="50" min="0">
+          </div>
+          <div>
+            <label>Loss factor (optional, %)</label>
+            <input id="lossPct" type="number" step="1" value="0" min="0" max="50">
+          </div>
         </div>
-        <div>
-          <label>Freeboard (m)</label>
-          <input id="fb" type="number" step="0.01" value="0.30" min="0">
+
+        <div id="inflowBox" class="grid2" style="display:none">
+          <div>
+            <label>Peak inflow Qp (m³/s)</label>
+            <input id="qp" type="number" step="0.01" value="1.2" min="0">
+          </div>
+          <div>
+            <label>Time to peak Tp (min)</label>
+            <input id="tp" type="number" step="1" value="45" min="1">
+          </div>
+          <div>
+            <label>Base duration Tb (min)</label>
+            <input id="tb" type="number" step="1" value="180" min="1">
+          </div>
+          <div>
+            <label>Loss factor (optional, %)</label>
+            <input id="lossPct2" type="number" step="1" value="0" min="0" max="50">
+          </div>
         </div>
+
+        <div id="volBox" class="grid2" style="display:none">
+          <div>
+            <label>Required Stormwater Volume (m³)</label>
+            <input id="vreqUser" type="number" step="1" value="500" min="0">
+          </div>
+          <div>
+            <label>Loss factor (optional, %)</label>
+            <input id="lossPct3" type="number" step="1" value="0" min="0" max="50">
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2>2) Levels</h2>
+        <div class="grid2">
+          <div>
+            <label>Ground / Crest Level (EGL) (m)</label>
+            <input id="egl" type="number" step="0.01" value="10.00">
+          </div>
+          <div>
+            <label>Pipe Invert Level (IL) (m)</label>
+            <input id="il" type="number" step="0.01" value="8.00">
+          </div>
+          <div>
+            <label>Depth below IL (m) (min 0.30)</label>
+            <input id="belowIL" type="number" step="0.01" value="0.30" min="0.30">
+          </div>
+          <div>
+            <label>Freeboard (m)</label>
+            <input id="fb" type="number" step="0.01" value="0.30" min="0">
+          </div>
+        </div>
+        <p class="muted small" style="margin:8px 0 0">Bottom = IL − depthBelowIL. Max WL = EGL − freeboard.</p>
+
+        <div class="hr"></div>
+
+        <h2>3) Geometry</h2>
+        <div class="row">
+          <div style="flex:2">
+            <label>Shape</label>
+            <select id="shape">
+              <option value="rect" selected>Rectangular (Upper L/W @ Max WL)</option>
+              <option value="circ">Circular (Upper Diameter @ Max WL)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="rectBox" class="grid2">
+          <div>
+            <label>Upper Length @ Max WL (m)</label>
+            <input id="ltop" type="number" step="0.1" value="50" min="0.1">
+          </div>
+          <div>
+            <label>Upper Width @ Max WL (m)</label>
+            <input id="wtop" type="number" step="0.1" value="40" min="0.1">
+          </div>
+          <div>
+            <label>Side slope Z:1 (H:V)</label>
+            <input id="z" type="number" step="0.1" value="3" min="0">
+          </div>
+          <div>
+            <label class="muted">Bottom dimensions are calculated</label>
+            <input disabled value="Auto-calculated">
+          </div>
+        </div>
+
+        <div id="circBox" class="grid2" style="display:none">
+          <div>
+            <label>Upper Diameter @ Max WL (m)</label>
+            <input id="dtop" type="number" step="0.1" value="40" min="0.1">
+          </div>
+          <div>
+            <label>Side slope Z:1 (H:V)</label>
+            <input id="zc" type="number" step="0.1" value="3" min="0">
+          </div>
+          <div>
+            <label class="muted">Bottom diameter is calculated</label>
+            <input disabled value="Auto-calculated">
+          </div>
+          <div></div>
+        </div>
+
+        <div class="btnrow">
+          <button id="run">CALCULATE</button>
+          <button id="btnReset" type="button">RESET EXAMPLE</button>
+        </div>
+
+        <div id="msg" class="msg">Ready.</div>
       </div>
-      <p class="muted">Bottom = IL − depthBelowIL. Max WL = EGL − freeboard.</p>
+
+      <!-- RIGHT: RESULTS + SKETCH -->
+      <div class="card">
+        <div class="splitHead">
+          <h2>Results & Sketch</h2>
+          <span id="statusTag" class="tag">—</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="t">Pond Bottom (m)</div><div id="kBottom" class="v">–</div></div>
+          <div class="kpi"><div class="t">Max Water Level (m)</div><div id="kMaxWL" class="v">–</div></div>
+          <div class="kpi"><div class="t">Available Depth (m)</div><div id="kDepth" class="v">–</div></div>
+
+          <div class="kpi"><div class="t">Upper Length @ Max WL (m)</div><div id="kTopL" class="v">–</div></div>
+          <div class="kpi"><div class="t">Upper Width @ Max WL (m)</div><div id="kTopW" class="v">–</div></div>
+          <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
+
+          <div class="kpi"><div class="t">Lower Length (Bottom) (m)</div><div id="kLowL" class="v">–</div></div>
+          <div class="kpi"><div class="t">Lower Width (Bottom) (m)</div><div id="kLowW" class="v">–</div></div>
+          <div class="kpi"><div class="t">Lower Diameter (Bottom) (m)</div><div id="kLowD" class="v">–</div></div>
+
+          <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
+          <div class="kpi"><div class="t">Storage Below IL (m³)</div><div id="kVbelow" class="v">–</div></div>
+          <div class="kpi"><div class="t">Storage IL → Max WL (m³)</div><div id="kVactive" class="v">–</div></div>
+
+          <div class="kpi"><div class="t">Required Volume (m³)</div><div id="kVreq" class="v">–</div></div>
+          <div class="kpi"><div class="t">Storage Check</div><div id="kPass" class="v">–</div></div>
+          <div class="kpi"><div class="t">Note</div><div id="kNote" class="v">–</div></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="sketchWrap">
+          <svg id="pondSketch" viewBox="0 0 900 520" role="img" aria-label="Pond sketch">
+            <defs>
+              <linearGradient id="waterGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="rgba(31,94,255,.55)"/>
+                <stop offset="1" stop-color="rgba(31,94,255,.18)"/>
+              </linearGradient>
+              <linearGradient id="soilGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="rgba(231,238,252,.12)"/>
+                <stop offset="1" stop-color="rgba(231,238,252,.04)"/>
+              </linearGradient>
+            </defs>
+
+            <!-- frame -->
+            <rect x="12" y="12" width="876" height="496" rx="18" ry="18" fill="rgba(11,20,40,.25)" stroke="rgba(38,54,87,.9)" stroke-width="2"/>
+
+            <!-- area -->
+            <g id="gDraw"></g>
+
+            <!-- legend -->
+            <g class="svgtxt" font-size="14" fill="rgba(168,183,214,.92)">
+              <circle cx="40" cy="480" r="6" fill="rgba(31,94,255,.55)"></circle>
+              <text x="55" y="485">Water</text>
+              <rect x="120" y="474" width="12" height="12" fill="url(#soilGrad)" stroke="rgba(231,238,252,.15)"></rect>
+              <text x="140" y="485">Pond Section</text>
+            </g>
+          </svg>
+          <div class="sketchNote">Sketch is illustrative (not to scale in plan). It shows the section profile, EGL, Max WL, IL, bottom, freeboard and key dimensions.</div>
+        </div>
+
+        <div class="hr"></div>
+        <p class="muted small" style="margin:0">
+          Rectangular: <b>Lb = Ltop − 2·Z·H</b>, <b>Wb = Wtop − 2·Z·H</b>.<br>
+          Circular: <b>r0 = (Dtop/2) − Z·H</b>, Dbottom = 2·r0.<br>
+          If any lower dimension ≤ 0 → <b>Increase the pond dimension</b>.
+        </p>
+      </div>
     </div>
-
-    <div class="card">
-      <h2>3) Pond Geometry (Upper Dimensions Input)</h2>
-      <div class="row">
-        <label style="flex:2">Shape</label>
-        <select id="shape">
-          <option value="rect" selected>Rectangular (Upper L/W @ Max WL, side slope Z:1)</option>
-          <option value="circ">Circular (Upper Diameter @ Max WL, side slope Z:1)</option>
-        </select>
-      </div>
-
-      <div id="rectBox" class="grid2">
-        <div>
-          <label>Upper Length @ Max WL (m)</label>
-          <input id="ltop" type="number" step="0.1" value="50" min="0.1">
-        </div>
-        <div>
-          <label>Upper Width @ Max WL (m)</label>
-          <input id="wtop" type="number" step="0.1" value="40" min="0.1">
-        </div>
-        <div>
-          <label>Side slope Z:1 (H:V)</label>
-          <input id="z" type="number" step="0.1" value="3" min="0">
-        </div>
-      </div>
-
-      <div id="circBox" class="grid2" style="display:none">
-        <div>
-          <label>Upper Diameter @ Max WL (m)</label>
-          <input id="dtop" type="number" step="0.1" value="40" min="0.1">
-        </div>
-        <div>
-          <label>Side slope Z:1 (H:V)</label>
-          <input id="zc" type="number" step="0.1" value="3" min="0">
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="run">CALCULATE</button>
-      </div>
-
-      <div id="msg" class="msg">Ready.</div>
-
-      <div class="kpis">
-        <div class="kpi"><div class="t">Pond Bottom (m)</div><div id="kBottom" class="v">–</div></div>
-        <div class="kpi"><div class="t">Max Water Level (m)</div><div id="kMaxWL" class="v">–</div></div>
-        <div class="kpi"><div class="t">Available Depth (m)</div><div id="kDepth" class="v">–</div></div>
-
-        <div class="kpi"><div class="t">Upper Length @ Max WL (m)</div><div id="kTopL" class="v">–</div></div>
-        <div class="kpi"><div class="t">Upper Width @ Max WL (m)</div><div id="kTopW" class="v">–</div></div>
-        <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
-
-        <div class="kpi"><div class="t">Lower Length (Bottom) (m)</div><div id="kLowL" class="v">–</div></div>
-        <div class="kpi"><div class="t">Lower Width (Bottom) (m)</div><div id="kLowW" class="v">–</div></div>
-        <div class="kpi"><div class="t">Lower Diameter (Bottom) (m)</div><div id="kLowD" class="v">–</div></div>
-
-        <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
-        <div class="kpi"><div class="t">Storage Below IL (m³)</div><div id="kVbelow" class="v">–</div></div>
-        <div class="kpi"><div class="t">Storage IL → Max WL (m³)</div><div id="kVactive" class="v">–</div></div>
-
-        <div class="kpi"><div class="t">Required Volume (m³)</div><div id="kVreq" class="v">–</div></div>
-        <div class="kpi"><div class="t">Storage Check</div><div id="kPass" class="v">–</div></div>
-        <div class="kpi"><div class="t">Runoff/ Inflow Note</div><div id="kNote" class="v">–</div></div>
-      </div>
-    </div>
-
-    <p class="muted" style="font-size:12px">
-      Rectangular: Lb = Ltop − 2·Z·H, Wb = Wtop − 2·Z·H.<br>
-      Circular: r0 = (Dtop/2) − Z·H, Dbottom = 2·r0.<br>
-      If lower dimension becomes ≤ 0 → message: “Increase the pond dimension”.
-    </p>
   </div>
 
 <script>
   const $ = id => document.getElementById(id);
   const fmt = (x,d=2)=> (isFinite(x)? Number(x).toFixed(d):"–");
+
+  function clampPct(x){ x = Number(x); return Math.min(Math.max(isFinite(x)?x:0,0),50); }
 
   function scsRunoffMm(Pmm, CN){
     const S_in = (1000/CN) - 10;
@@ -205,7 +404,6 @@
   function pondVolumeRect(Lb, Wb, Z, H){
     return (Lb*Wb*H) + (Z*(Lb+Wb)*H*H) + ((4/3)*Z*Z*H*H*H);
   }
-
   function pondVolumeCirc(r0, Z, H){
     return Math.PI*(r0*r0*H + r0*Z*H*H + (Z*Z/3)*H*H*H);
   }
@@ -216,20 +414,260 @@
     $("inflowBox").style.display = (m==="inflow") ? "grid" : "none";
     $("volBox").style.display    = (m==="vol") ? "grid" : "none";
   }
-
   function toggleShape(){
     const s = $("shape").value;
     $("rectBox").style.display = (s==="rect") ? "grid" : "none";
     $("circBox").style.display = (s==="circ") ? "grid" : "none";
+    // redraw sketch even before calc (use current inputs)
+    safeSketchFromInputs();
+  }
+
+  function setStatus(pass, text){
+    const tag = $("statusTag");
+    if(text) tag.textContent = text;
+    tag.style.borderColor = pass===true ? "rgba(0,230,118,.45)" : pass===false ? "rgba(255,82,82,.45)" : "rgba(38,54,87,.75)";
+    tag.style.color = pass===true ? "rgba(0,230,118,.95)" : pass===false ? "rgba(255,82,82,.95)" : "rgba(168,183,214,.92)";
+    tag.style.background = pass===true ? "rgba(0,230,118,.08)" : pass===false ? "rgba(255,82,82,.08)" : "rgba(11,20,40,.35)";
   }
 
   function setPassColor(isPass){
     const el = $("kPass");
     el.classList.remove("pass","fail");
-    el.classList.add(isPass ? "pass" : "fail");
+    if(isPass === true) el.classList.add("pass");
+    if(isPass === false) el.classList.add("fail");
   }
 
-  function clampPct(x){ return Math.min(Math.max(x,0),50); }
+  function setMsg(txt){ $("msg").textContent = txt; }
+
+  function line(y, label, color="rgba(168,183,214,.85)", dash=false){
+    return `
+      <g class="svgtxt">
+        <line x1="70" x2="830" y1="${y}" y2="${y}" stroke="${color}" stroke-width="2" ${dash ? 'stroke-dasharray="8 6"' : ""}/>
+        <rect x="70" y="${y-18}" width="${Math.max(110, label.length*7)}" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
+        <text x="82" y="${y-2}" font-size="14" fill="rgba(231,238,252,.92)">${label}</text>
+      </g>
+    `;
+  }
+
+  function arrowH(y, x1, x2, label){
+    const mid = (x1+x2)/2;
+    const minx = Math.min(x1,x2), maxx = Math.max(x1,x2);
+    return `
+      <g class="svgtxt">
+        <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(231,238,252,.75)" stroke-width="2"/>
+        <polygon points="${minx},${y} ${minx+10},${y-6} ${minx+10},${y+6}" fill="rgba(231,238,252,.75)"/>
+        <polygon points="${maxx},${y} ${maxx-10},${y-6} ${maxx-10},${y+6}" fill="rgba(231,238,252,.75)"/>
+        <rect x="${mid-70}" y="${y-28}" width="140" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
+        <text x="${mid}" y="${y-12}" font-size="13" text-anchor="middle" fill="rgba(231,238,252,.92)">${label}</text>
+      </g>
+    `;
+  }
+
+  function arrowV(x, y1, y2, label){
+    const mid = (y1+y2)/2;
+    const miny = Math.min(y1,y2), maxy = Math.max(y1,y2);
+    return `
+      <g class="svgtxt">
+        <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="rgba(231,238,252,.75)" stroke-width="2"/>
+        <polygon points="${x},${miny} ${x-6},${miny+10} ${x+6},${miny+10}" fill="rgba(231,238,252,.75)"/>
+        <polygon points="${x},${maxy} ${x-6},${maxy-10} ${x+6},${maxy-10}" fill="rgba(231,238,252,.75)"/>
+        <rect x="${x-58}" y="${mid-11}" width="116" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
+        <text x="${x}" y="${mid+5}" font-size="13" text-anchor="middle" fill="rgba(231,238,252,.92)">${label}</text>
+      </g>
+    `;
+  }
+
+  function drawSketchRect({egl, maxWL, il, bottom, fb, H, Z, Ltop, Wtop, Lb, Wb}){
+    const g = $("gDraw");
+
+    // Layout coordinates
+    const left = 170, right = 730;
+    const topY = 90, botY = 410;
+
+    // Map elevations to y (simple linear map)
+    const elevMax = egl;
+    const elevMin = bottom;
+    const mapY = (e)=> {
+      if(elevMax === elevMin) return botY;
+      const t = (elevMax - e) / (elevMax - elevMin);
+      return topY + t*(botY - topY);
+    };
+
+    const yEGL = mapY(egl);
+    const yMaxWL = mapY(maxWL);
+    const yIL = mapY(il);
+    const yBottom = mapY(bottom);
+
+    // Build trapezoid section (not to scale in plan, but consistent)
+    const maxSpan = 520;
+    const topSpan = clampSpan(Ltop, maxSpan);
+    const botSpan = clampSpan(Lb, maxSpan);
+
+    const cx = (left+right)/2;
+    const xTop1 = cx - topSpan/2;
+    const xTop2 = cx + topSpan/2;
+    const xBot1 = cx - botSpan/2;
+    const xBot2 = cx + botSpan/2;
+
+    const poly = `
+      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
+        fill="url(#soilGrad)" stroke="rgba(231,238,252,.22)" stroke-width="2" />
+    `;
+
+    // Water fill inside up to MaxWL
+    const water = `
+      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
+        fill="url(#waterGrad)" opacity="0.65" />
+    `;
+
+    // Level lines + annotations
+    const fbTxt = `Freeboard = ${fmt(fb,2)} m`;
+    const hTxt = `Depth H = ${fmt(H,2)} m`;
+    const zTxt = `Side slope Z:1 = ${fmt(Z,2)}:1`;
+
+    const lvlLines =
+      line(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
+      line(yMaxWL, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
+      line(yIL, `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
+      line(yBottom, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
+
+    const dims =
+      arrowH(yMaxWL - 32, xTop1, xTop2, `Upper L (shown) = ${fmt(Ltop,2)} m`) +
+      arrowH(yBottom + 34, xBot1, xBot2, `Lower L = ${fmt(Lb,2)} m`) +
+      arrowV(820, yMaxWL, yBottom, hTxt);
+
+    const notes = `
+      <g class="svgtxt">
+        <text x="70" y="60" font-size="15" fill="rgba(231,238,252,.92)">Rectangular Section (illustrative)</text>
+        <text x="70" y="78" font-size="13" fill="rgba(168,183,214,.92)">${fbTxt}  •  ${zTxt}</text>
+        <text x="70" y="96" font-size="13" fill="rgba(168,183,214,.92)">Upper Width input = ${fmt(Wtop,2)} m  →  Lower Width = ${fmt(Wb,2)} m</text>
+      </g>
+    `;
+
+    g.innerHTML = poly + water + lvlLines + dims + notes;
+  }
+
+  function drawSketchCirc({egl, maxWL, il, bottom, fb, H, Z, Dtop, Dbottom}){
+    const g = $("gDraw");
+
+    const left = 170, right = 730;
+    const topY = 90, botY = 410;
+
+    const elevMax = egl;
+    const elevMin = bottom;
+    const mapY = (e)=> {
+      if(elevMax === elevMin) return botY;
+      const t = (elevMax - e) / (elevMax - elevMin);
+      return topY + t*(botY - topY);
+    };
+
+    const yEGL = mapY(egl);
+    const yMaxWL = mapY(maxWL);
+    const yIL = mapY(il);
+    const yBottom = mapY(bottom);
+
+    const maxSpan = 520;
+    const topSpan = clampSpan(Dtop, maxSpan);
+    const botSpan = clampSpan(Dbottom, maxSpan);
+
+    const cx = (left+right)/2;
+    const xTop1 = cx - topSpan/2;
+    const xTop2 = cx + topSpan/2;
+    const xBot1 = cx - botSpan/2;
+    const xBot2 = cx + botSpan/2;
+
+    const poly = `
+      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
+        fill="url(#soilGrad)" stroke="rgba(231,238,252,.22)" stroke-width="2" />
+    `;
+    const water = `
+      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
+        fill="url(#waterGrad)" opacity="0.65" />
+    `;
+
+    const fbTxt = `Freeboard = ${fmt(fb,2)} m`;
+    const zTxt = `Side slope Z:1 = ${fmt(Z,2)}:1`;
+
+    const lvlLines =
+      line(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
+      line(yMaxWL, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
+      line(yIL, `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
+      line(yBottom, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
+
+    const dims =
+      arrowH(yMaxWL - 32, xTop1, xTop2, `Upper D (shown) = ${fmt(Dtop,2)} m`) +
+      arrowH(yBottom + 34, xBot1, xBot2, `Lower D = ${fmt(Dbottom,2)} m`) +
+      arrowV(820, yMaxWL, yBottom, `Depth H = ${fmt(H,2)} m`);
+
+    const notes = `
+      <g class="svgtxt">
+        <text x="70" y="60" font-size="15" fill="rgba(231,238,252,.92)">Circular (Conical) Section (illustrative)</text>
+        <text x="70" y="78" font-size="13" fill="rgba(168,183,214,.92)">${fbTxt}  •  ${zTxt}</text>
+      </g>
+    `;
+
+    g.innerHTML = poly + water + lvlLines + dims + notes;
+  }
+
+  function clampSpan(realMeters, maxSpanPx){
+    // Convert "meters" to a sketch span. Keep readable for very big/small values.
+    // Using a soft mapping: spanPx = base + k * meters, then clamp.
+    const m = Math.max(0, Number(realMeters));
+    const span = 120 + 6.2 * m;
+    return Math.max(90, Math.min(maxSpanPx, span));
+  }
+
+  function safeSketchFromInputs(){
+    // Try to draw something even before calc.
+    const egl = Number($("egl").value);
+    const il  = Number($("il").value);
+    const below = Math.max(Number($("belowIL").value), 0.30);
+    const fb  = Number($("fb").value);
+
+    if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)){
+      $("gDraw").innerHTML = "";
+      return;
+    }
+
+    const bottom = il - below;
+    const maxWL = egl - fb;
+    const H = maxWL - bottom;
+    if(!(H>0)){
+      $("gDraw").innerHTML = "";
+      return;
+    }
+
+    const shape = $("shape").value;
+    if(shape === "rect"){
+      const Ltop = Number($("ltop").value);
+      const Wtop = Number($("wtop").value);
+      const Z = Number($("z").value);
+      if(!(isFinite(Ltop)&&isFinite(Wtop)&&isFinite(Z))) return;
+
+      const Lb = Ltop - 2*Z*H;
+      const Wb = Wtop - 2*Z*H;
+
+      drawSketchRect({
+        egl, maxWL, il, bottom, fb, H, Z,
+        Ltop: isFinite(Ltop)?Ltop:0,
+        Wtop: isFinite(Wtop)?Wtop:0,
+        Lb: isFinite(Lb)?Math.max(Lb,0):0,
+        Wb: isFinite(Wb)?Math.max(Wb,0):0
+      });
+    } else {
+      const Dtop = Number($("dtop").value);
+      const Z = Number($("zc").value);
+      if(!(isFinite(Dtop)&&isFinite(Z))) return;
+
+      const Dbottom = Dtop - 2*Z*H;
+
+      drawSketchCirc({
+        egl, maxWL, il, bottom, fb, H, Z,
+        Dtop: isFinite(Dtop)?Dtop:0,
+        Dbottom: isFinite(Dbottom)?Math.max(Dbottom,0):0
+      });
+    }
+  }
 
   function calc(){
     try{
@@ -246,7 +684,7 @@
       const bottom = il - below;
       const maxWL  = egl - fb;
       const H = maxWL - bottom;
-      if(!(H>0)) throw new Error("Invalid: (EGL - FB) must be above (IL - below).");
+      if(!(H>0)) throw new Error("Invalid levels: (EGL - Freeboard) must be above (IL - Depth below IL).");
 
       // Geometry (user inputs UPPER dims, compute LOWER dims)
       const shape = $("shape").value;
@@ -254,7 +692,6 @@
       let Vtot = 0;
       let Vbelow = 0;
 
-      // Display values
       let topL = NaN, topW = NaN, topD = NaN;
       let lowL = NaN, lowW = NaN, lowD = NaN;
 
@@ -265,7 +702,6 @@
 
         if(!(topL>0 && topW>0 && Z>=0)) throw new Error("Check rectangular upper dimensions and side slope.");
 
-        // Compute bottom dims
         lowL = topL - 2*Z*H;
         lowW = topW - 2*Z*H;
 
@@ -275,28 +711,26 @@
 
         Vtot = pondVolumeRect(lowL, lowW, Z, H);
 
-        // storage below IL (depth = belowIL)
         const Hbelow = Math.max(0, il - bottom);
         if(Hbelow > 0){
           const hUse = Math.min(Hbelow, H);
           Vbelow = pondVolumeRect(lowL, lowW, Z, hUse);
         }
+
+        drawSketchRect({egl, maxWL, il, bottom, fb, H, Z, Ltop:topL, Wtop:topW, Lb:lowL, Wb:lowW});
       } else {
         topD = Number($("dtop").value);
         const Z  = Number($("zc").value);
 
         if(!(topD>0 && Z>=0)) throw new Error("Check circular upper diameter and side slope.");
 
-        // Compute bottom radius from top radius
         const rTop = topD/2;
         const r0 = rTop - Z*H;
-
         if(!(r0 > 0)){
           throw new Error("Increase the pond dimension (upper diameter too small for this depth and side slope).");
         }
 
         lowD = 2*r0;
-
         Vtot = pondVolumeCirc(r0, Z, H);
 
         const Hbelow = Math.max(0, il - bottom);
@@ -304,6 +738,8 @@
           const hUse = Math.min(Hbelow, H);
           Vbelow = pondVolumeCirc(r0, Z, hUse);
         }
+
+        drawSketchCirc({egl, maxWL, il, bottom, fb, H, Z, Dtop:topD, Dbottom:lowD});
       }
 
       const Vactive = Math.max(0, Vtot - Vbelow);
@@ -317,32 +753,35 @@
         const areaHa = Number($("areaHa").value);
         const cn = Number($("cn").value);
         const pmm = Number($("pmm").value);
-        const loss = clampPct(Number($("lossPct").value || 0));
+        const loss = clampPct($("lossPct").value);
+
         if(!(areaHa>0 && cn>=30 && cn<=98 && pmm>=0)) throw new Error("Check SCS inputs.");
 
         const qmm = scsRunoffMm(pmm, cn);
         const areaM2 = areaHa * 10000;
         Vreq = (qmm/1000) * areaM2;
         Vreq *= (1 - loss/100);
-        note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm`;
+        note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm (loss ${fmt(loss,0)}%)`;
       }
       else if(mode==="inflow"){
         const Qp = Number($("qp").value);
         const Tp = Number($("tp").value);
         const Tb = Number($("tb").value);
-        const loss = clampPct(Number($("lossPct2").value || 0));
+        const loss = clampPct($("lossPct2").value);
+
         if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs (Tb ≥ Tp).");
 
         Vreq = 0.5 * Qp * (Tb*60);
         Vreq *= (1 - loss/100);
-        note = `Triangular inflow volume from Qp & Tb`;
+        note = `Triangular inflow volume from Qp & Tb (loss ${fmt(loss,0)}%)`;
       }
       else {
         const vuser = Number($("vreqUser").value);
-        const loss = clampPct(Number($("lossPct3").value || 0));
+        const loss = clampPct($("lossPct3").value);
+
         if(!(vuser>=0)) throw new Error("Enter a valid required volume (m³).");
         Vreq = vuser * (1 - loss/100);
-        note = `Direct required volume (after loss)`;
+        note = `Direct required volume (loss ${fmt(loss,0)}%)`;
       }
 
       const pass = (Vtot >= Vreq);
@@ -370,25 +809,82 @@
 
       $("kNote").textContent   = note;
 
-      $("msg").textContent = pass
-        ? "PASS: Pond storage at max WL is ≥ required volume."
-        : "FAIL: Increase pond size or revise assumptions.";
+      if(pass){
+        setMsg(`PASS: Storage @ Max WL (${fmt(Vtot,0)} m³) ≥ required (${fmt(Vreq,0)} m³).`);
+        setStatus(true, "PASS");
+      } else {
+        setMsg(`FAIL: Storage @ Max WL (${fmt(Vtot,0)} m³) < required (${fmt(Vreq,0)} m³). Increase pond size/depth or revise assumptions.`);
+        setStatus(false, "FAIL");
+      }
 
     } catch(e){
-      $("msg").textContent = e.message || String(e);
-
-      // Clear pass indicator
+      setMsg(e.message || String(e));
       $("kPass").textContent = "–";
       $("kPass").classList.remove("pass","fail");
+      setStatus(null, "—");
+      safeSketchFromInputs(); // still draw what we can
     }
   }
 
+  function resetExample(){
+    $("mode").value = "scs";
+    $("areaHa").value = 20;
+    $("cn").value = 85;
+    $("pmm").value = 50;
+    $("lossPct").value = 0;
+
+    $("qp").value = 1.2;
+    $("tp").value = 45;
+    $("tb").value = 180;
+    $("lossPct2").value = 0;
+
+    $("vreqUser").value = 500;
+    $("lossPct3").value = 0;
+
+    $("egl").value = 10.00;
+    $("il").value = 8.00;
+    $("belowIL").value = 0.30;
+    $("fb").value = 0.30;
+
+    $("shape").value = "rect";
+    $("ltop").value = 50;
+    $("wtop").value = 40;
+    $("z").value = 3;
+
+    $("dtop").value = 40;
+    $("zc").value = 3;
+
+    toggleMode();
+    toggleShape();
+    setMsg("Ready. Adjust inputs then click CALCULATE.");
+    setStatus(null, "—");
+    safeSketchFromInputs();
+  }
+
+  function bindLiveSketch(){
+    const ids = [
+      "egl","il","belowIL","fb",
+      "shape","ltop","wtop","z","dtop","zc"
+    ];
+    ids.forEach(id=>{
+      $(id).addEventListener("input", safeSketchFromInputs);
+      $(id).addEventListener("change", safeSketchFromInputs);
+    });
+  }
+
+  // Events
   $("mode").addEventListener("change", toggleMode);
   $("shape").addEventListener("change", toggleShape);
   $("run").addEventListener("click", calc);
+  $("btnReset").addEventListener("click", resetExample);
 
+  // Init
   toggleMode();
   toggleShape();
+  bindLiveSketch();
+  safeSketchFromInputs();
+  setStatus(null, "—");
+  setMsg("Ready. Adjust inputs then click CALCULATE.");
 </script>
 </body>
 </html>
