@@ -32,7 +32,7 @@
 <body>
   <div class="wrap">
     <h1>Pond Volume Calculator (Simple)</h1>
-    <p class="muted">Computes pond storage from levels + geometry and checks against required volume (SCS, inflow, or direct volume). Also shows upper (top) dimensions at Max WL.</p>
+    <p class="muted">User enters UPPER dimensions at Max WL. Calculator computes LOWER (bottom) dimensions from side slope and depth and shows them in summary.</p>
 
     <div class="card">
       <h2>1) Choose Required Volume Method</h2>
@@ -119,23 +119,23 @@
     </div>
 
     <div class="card">
-      <h2>3) Pond Geometry (Simple)</h2>
+      <h2>3) Pond Geometry (Upper Dimensions Input)</h2>
       <div class="row">
         <label style="flex:2">Shape</label>
         <select id="shape">
-          <option value="rect" selected>Rectangular (Lb, Wb, side slope Z:1)</option>
-          <option value="circ">Circular (r0, side slope Z:1)</option>
+          <option value="rect" selected>Rectangular (Upper L/W @ Max WL, side slope Z:1)</option>
+          <option value="circ">Circular (Upper Diameter @ Max WL, side slope Z:1)</option>
         </select>
       </div>
 
       <div id="rectBox" class="grid2">
         <div>
-          <label>Bottom Length Lb (m)</label>
-          <input id="lb" type="number" step="0.1" value="30" min="0.1">
+          <label>Upper Length @ Max WL (m)</label>
+          <input id="ltop" type="number" step="0.1" value="50" min="0.1">
         </div>
         <div>
-          <label>Bottom Width Wb (m)</label>
-          <input id="wb" type="number" step="0.1" value="20" min="0.1">
+          <label>Upper Width @ Max WL (m)</label>
+          <input id="wtop" type="number" step="0.1" value="40" min="0.1">
         </div>
         <div>
           <label>Side slope Z:1 (H:V)</label>
@@ -145,8 +145,8 @@
 
       <div id="circBox" class="grid2" style="display:none">
         <div>
-          <label>Bottom Radius r0 (m)</label>
-          <input id="r0" type="number" step="0.1" value="12" min="0.1">
+          <label>Upper Diameter @ Max WL (m)</label>
+          <input id="dtop" type="number" step="0.1" value="40" min="0.1">
         </div>
         <div>
           <label>Side slope Z:1 (H:V)</label>
@@ -169,6 +169,10 @@
         <div class="kpi"><div class="t">Upper Width @ Max WL (m)</div><div id="kTopW" class="v">–</div></div>
         <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
 
+        <div class="kpi"><div class="t">Lower Length (Bottom) (m)</div><div id="kLowL" class="v">–</div></div>
+        <div class="kpi"><div class="t">Lower Width (Bottom) (m)</div><div id="kLowW" class="v">–</div></div>
+        <div class="kpi"><div class="t">Lower Diameter (Bottom) (m)</div><div id="kLowD" class="v">–</div></div>
+
         <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
         <div class="kpi"><div class="t">Storage Below IL (m³)</div><div id="kVbelow" class="v">–</div></div>
         <div class="kpi"><div class="t">Storage IL → Max WL (m³)</div><div id="kVactive" class="v">–</div></div>
@@ -180,8 +184,9 @@
     </div>
 
     <p class="muted" style="font-size:12px">
-      Units: m, m³. SCS runoff uses NRCS CN method (Ia = 0.2S). Inflow volume uses triangular area.
-      Top dimensions use: Ltop = Lb + 2·Z·H, Wtop = Wb + 2·Z·H, Dtop = 2·(r0 + Z·H).
+      Rectangular: Lb = Ltop − 2·Z·H, Wb = Wtop − 2·Z·H.<br>
+      Circular: r0 = (Dtop/2) − Z·H, Dbottom = 2·r0.<br>
+      If lower dimension becomes ≤ 0 → message: “Increase the pond dimension”.
     </p>
   </div>
 
@@ -243,45 +248,64 @@
       const H = maxWL - bottom;
       if(!(H>0)) throw new Error("Invalid: (EGL - FB) must be above (IL - below).");
 
-      // Storage total
+      // Geometry (user inputs UPPER dims, compute LOWER dims)
       const shape = $("shape").value;
+
       let Vtot = 0;
+      let Vbelow = 0;
 
-      // Top dimensions
+      // Display values
       let topL = NaN, topW = NaN, topD = NaN;
+      let lowL = NaN, lowW = NaN, lowD = NaN;
 
-      if(shape==="rect"){
-        const Lb = Number($("lb").value), Wb = Number($("wb").value), Z = Number($("z").value);
-        if(!(Lb>0 && Wb>0 && Z>=0)) throw new Error("Check rectangular geometry inputs.");
+      if(shape === "rect"){
+        topL = Number($("ltop").value);
+        topW = Number($("wtop").value);
+        const Z  = Number($("z").value);
 
-        Vtot = pondVolumeRect(Lb, Wb, Z, H);
+        if(!(topL>0 && topW>0 && Z>=0)) throw new Error("Check rectangular upper dimensions and side slope.");
 
-        topL = Lb + 2*Z*H;
-        topW = Wb + 2*Z*H;
-        topD = NaN;
+        // Compute bottom dims
+        lowL = topL - 2*Z*H;
+        lowW = topW - 2*Z*H;
+
+        if(!(lowL > 0 && lowW > 0)){
+          throw new Error("Increase the pond dimension (upper L/W too small for this depth and side slope).");
+        }
+
+        Vtot = pondVolumeRect(lowL, lowW, Z, H);
+
+        // storage below IL (depth = belowIL)
+        const Hbelow = Math.max(0, il - bottom);
+        if(Hbelow > 0){
+          const hUse = Math.min(Hbelow, H);
+          Vbelow = pondVolumeRect(lowL, lowW, Z, hUse);
+        }
       } else {
-        const r0 = Number($("r0").value), Z = Number($("zc").value);
-        if(!(r0>0 && Z>=0)) throw new Error("Check circular geometry inputs.");
+        topD = Number($("dtop").value);
+        const Z  = Number($("zc").value);
+
+        if(!(topD>0 && Z>=0)) throw new Error("Check circular upper diameter and side slope.");
+
+        // Compute bottom radius from top radius
+        const rTop = topD/2;
+        const r0 = rTop - Z*H;
+
+        if(!(r0 > 0)){
+          throw new Error("Increase the pond dimension (upper diameter too small for this depth and side slope).");
+        }
+
+        lowD = 2*r0;
 
         Vtot = pondVolumeCirc(r0, Z, H);
 
-        const rTop = r0 + Z*H;
-        topD = 2*rTop;
-        topL = NaN;
-        topW = NaN;
-      }
-
-      // Storage below IL
-      const Hbelow = Math.max(0, il - bottom);
-      let Vbelow = 0;
-      if(Hbelow > 0){
-        const hUse = Math.min(Hbelow, H);
-        if(shape==="rect"){
-          Vbelow = pondVolumeRect(Number($("lb").value), Number($("wb").value), Number($("z").value), hUse);
-        } else {
-          Vbelow = pondVolumeCirc(Number($("r0").value), Number($("zc").value), hUse);
+        const Hbelow = Math.max(0, il - bottom);
+        if(Hbelow > 0){
+          const hUse = Math.min(Hbelow, H);
+          Vbelow = pondVolumeCirc(r0, Z, hUse);
         }
       }
+
       const Vactive = Math.max(0, Vtot - Vbelow);
 
       // Required volume
@@ -332,6 +356,10 @@
       $("kTopW").textContent = isFinite(topW) ? fmt(topW,2) : "–";
       $("kTopD").textContent = isFinite(topD) ? fmt(topD,2) : "–";
 
+      $("kLowL").textContent = isFinite(lowL) ? fmt(lowL,2) : "–";
+      $("kLowW").textContent = isFinite(lowW) ? fmt(lowW,2) : "–";
+      $("kLowD").textContent = isFinite(lowD) ? fmt(lowD,2) : "–";
+
       $("kVtot").textContent   = fmt(Vtot,0);
       $("kVbelow").textContent = fmt(Vbelow,0);
       $("kVactive").textContent= fmt(Vactive,0);
@@ -344,10 +372,12 @@
 
       $("msg").textContent = pass
         ? "PASS: Pond storage at max WL is ≥ required volume."
-        : "FAIL: Increase pond size/depth or revise assumptions.";
+        : "FAIL: Increase pond size or revise assumptions.";
 
     } catch(e){
       $("msg").textContent = e.message || String(e);
+
+      // Clear pass indicator
       $("kPass").textContent = "–";
       $("kPass").classList.remove("pass","fail");
     }
