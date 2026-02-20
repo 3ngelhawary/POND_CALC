@@ -20,10 +20,10 @@
       --shadow:0 12px 35px rgba(0,0,0,.28);
       --radius:16px;
 
-      --berm:#2f7dff;     /* Upper (Berm) dims */
+      --berm:#2f7dff;     /* Berm dims */
       --bottom:#16c784;   /* Bottom dims */
-      --wl:#b45cff;       /* Max WL surface dims */
-      --depth:#ff9f1a;    /* Depth */
+      --wl:#b45cff;       /* Max WL dims */
+      --levels:#ff9f1a;   /* Levels lines */
     }
 
     *{box-sizing:border-box}
@@ -39,7 +39,7 @@
 
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
     h1{margin:0;font-size:26px;letter-spacing:.2px}
-    .subtitle{margin:6px 0 0;color:var(--muted);max-width:980px;line-height:1.35}
+    .subtitle{margin:6px 0 0;color:var(--muted);max-width:1100px;line-height:1.35}
 
     .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
     @media(max-width:1200px){ .grid{grid-template-columns:1fr 1fr} }
@@ -123,14 +123,19 @@
     .pass{color:var(--good)}
     .fail{color:var(--bad)}
 
-    .sketchWrap{
+    /* Graph */
+    .graphWrap{
       border:1px solid var(--line);
       border-radius:14px;
-      background:#ffffff;
-      padding:10px;
-      overflow:hidden;
+      background:rgba(11,20,40,.25);
+      padding:12px;
     }
-    svg{width:100%;height:auto;display:block}
+    .legendRow{
+      display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 0;
+      color:var(--muted);font-size:12px
+    }
+    .chip{display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(11,20,40,.35)}
+    .dot{width:10px;height:10px;border-radius:50%}
   </style>
 </head>
 
@@ -139,7 +144,7 @@
     <div class="topbar">
       <div>
         <h1>Pond Volume Calculator</h1>
-        <div class="subtitle"><b>Upper (Length/Width)</b> are at <b>Berm Level (EGL)</b>. The calculator derives <b>Bottom</b> dimensions using total depth to EGL. Storage is computed up to <b>Max Water Level = EGL − Freeboard</b>.</div>
+        <div class="subtitle"><b>Upper Length/Width</b> are at <b>Berm Level (EGL)</b>. Bottom dimensions are derived using <b>Depth Bottom → EGL</b>. Storage is computed up to <b>Max WL = EGL − Freeboard</b>.</div>
       </div>
     </div>
 
@@ -153,14 +158,14 @@
 
         <div class="hr"></div>
 
-        <h2>1) Required Volume Method</h2>
+        <h2>1) Required Volume</h2>
         <div class="row">
           <div style="flex:2">
             <label>Method</label>
             <select id="mode">
-              <option value="scs" selected>SCS Runoff Volume (Area + CN + Storm Depth)</option>
-              <option value="inflow">Storm Inflow Volume (Triangular Qp/Tp/Tb)</option>
-              <option value="vol">Direct Stormwater Volume (User Input m³)</option>
+              <option value="scs" selected>SCS Runoff Volume</option>
+              <option value="inflow">Storm Inflow Volume (Triangular)</option>
+              <option value="vol">Direct Stormwater Volume (m³)</option>
             </select>
           </div>
         </div>
@@ -305,8 +310,8 @@
           <div class="kpi"><div class="t">Depth Bottom → EGL (m)</div><div id="kHEGL" class="v">–</div></div>
           <div class="kpi"><div class="t">Depth Bottom → Max WL (m)</div><div id="kHWL" class="v">–</div></div>
 
-          <div class="kpi kpiBerm"><div class="t">Upper Length @ Berm (EGL) (m)</div><div id="kTopL" class="v">–</div></div>
-          <div class="kpi kpiBerm"><div class="t">Upper Width @ Berm (EGL) (m)</div><div id="kTopW" class="v">–</div></div>
+          <div class="kpi kpiBerm"><div class="t">Upper Length @ Berm (m)</div><div id="kTopL" class="v">–</div></div>
+          <div class="kpi kpiBerm"><div class="t">Upper Width @ Berm (m)</div><div id="kTopW" class="v">–</div></div>
 
           <div class="kpi kpiWL"><div class="t">Length @ Max WL (m)</div><div id="kWLL" class="v">–</div></div>
           <div class="kpi kpiWL"><div class="t">Width @ Max WL (m)</div><div id="kWLW" class="v">–</div></div>
@@ -314,7 +319,7 @@
           <div class="kpi kpiBottom"><div class="t">Lower Length (Bottom) (m)</div><div id="kLowL" class="v">–</div></div>
           <div class="kpi kpiBottom"><div class="t">Lower Width (Bottom) (m)</div><div id="kLowW" class="v">–</div></div>
 
-          <div class="kpi kpiBerm"><div class="t">Upper Diameter @ Berm (EGL) (m)</div><div id="kTopD" class="v">–</div></div>
+          <div class="kpi kpiBerm"><div class="t">Upper Diameter @ Berm (m)</div><div id="kTopD" class="v">–</div></div>
           <div class="kpi kpiBottom"><div class="t">Lower Diameter (Bottom) (m)</div><div id="kLowD" class="v">–</div></div>
 
           <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
@@ -323,61 +328,33 @@
 
           <div class="kpi"><div class="t">Required Volume (m³)</div><div id="kVreq" class="v">–</div></div>
           <div class="kpi"><div class="t">Storage Check</div><div id="kPass" class="v">–</div></div>
-          <div class="kpi"><div class="t">Note</div><div id="kNote" class="v">–</div></div>
+          <div class="kpi"><div class="t">Freeboard (m)</div><div id="kFB" class="v">–</div></div>
         </div>
       </div>
 
-      <!-- SKETCH -->
+      <!-- GRAPH -->
       <div class="card">
         <div class="splitHead">
-          <h2>Sketch</h2>
-          <span class="tag">Berm / Max WL / Bottom</span>
+          <h2>Graph</h2>
+          <span class="tag">Dimensions vs Elevation</span>
         </div>
 
-        <div class="sketchWrap">
-          <svg viewBox="0 0 1200 980" role="img" aria-label="Pond sketch">
-            <defs>
-              <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#000" flood-opacity="0.25"/>
-              </filter>
+        <div class="graphWrap">
+          <canvas id="chartGeom" height="420"></canvas>
 
-              <marker id="arrB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f7dff"></path>
-              </marker>
-              <marker id="arrW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45cff"></path>
-              </marker>
-              <marker id="arrG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#16c784"></path>
-              </marker>
-              <marker id="arrD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff9f1a"></path>
-              </marker>
-
-              <linearGradient id="gSoil" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#b9d67b"/>
-                <stop offset="1" stop-color="#7f9851"/>
-              </linearGradient>
-              <linearGradient id="gWall" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#f5f8fe"/>
-                <stop offset="1" stop-color="#d2dbe7"/>
-              </linearGradient>
-              <linearGradient id="gWall2" x1="0" x2="1" y1="0" y2="1">
-                <stop offset="0" stop-color="#eaf0f8"/>
-                <stop offset="1" stop-color="#c4cfde"/>
-              </linearGradient>
-              <linearGradient id="gWater" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#9fe0ff"/>
-                <stop offset="1" stop-color="#2ea7e0"/>
-              </linearGradient>
-            </defs>
-
-            <g id="gDraw"></g>
-          </svg>
+          <div class="legendRow">
+            <div class="chip"><span class="dot" style="background:var(--berm)"></span> Berm (EGL)</div>
+            <div class="chip"><span class="dot" style="background:var(--wl)"></span> Max WL</div>
+            <div class="chip"><span class="dot" style="background:var(--bottom)"></span> Bottom</div>
+            <div class="chip"><span class="dot" style="background:var(--levels)"></span> Level Lines</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
   const $ = id => document.getElementById(id);
@@ -409,7 +386,7 @@
     const s = $("shape").value;
     $("rectBox").style.display = (s==="rect") ? "grid" : "none";
     $("circBox").style.display = (s==="circ") ? "grid" : "none";
-    safeSketchFromInputs();
+    updateGraphFromInputs();
   }
 
   function setStatus(pass, text){
@@ -427,285 +404,239 @@
   }
   function setMsg(txt){ $("msg").textContent = txt; }
 
-  // ---------------------- SKETCH (NEW, MUCH CLEANER) ----------------------
-  function esc(s){
-    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-  }
-  function T(x,y,s,fs=36,fw=1000,fill="#111",anchor="start"){
-    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="system-ui,Segoe UI,Roboto,Arial" font-size="${fs}" font-weight="${fw}" fill="${fill}">${esc(s)}</text>`;
-  }
-  function R(x,y,w,h,rx=20,fill="#fff",stroke="#111",sw=5){
-    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
-  }
-  function P(points,fill,stroke="#111",sw=4,op=1){
-    return `<polygon points="${points}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/>`;
-  }
-  function L(x1,y1,x2,y2,stroke="#111",sw=5){
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${sw}"/>`;
-  }
-  function Dim(x1,y1,x2,y2,color,marker,sw=10){
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${sw}" marker-start="url(#${marker})" marker-end="url(#${marker})"/>`;
-  }
-  function Tag(x,y,text,bg,fg){
-    const w = Math.max(320, text.length*18);
-    return `<g filter="url(#ds)">${R(x,y,w,70,22,bg,"#111",5)}${T(x+w/2,y+48,text,34,1000,fg,"middle")}</g>`;
+  // ---------------- GRAPH ----------------
+  let chartGeom = null;
+
+  function asPoint(x,y){ return {x, y}; }
+
+  function makeHLine(y, xMin, xMax){
+    return [asPoint(xMin,y), asPoint(xMax,y)];
   }
 
-  function spanPx(m){
-    const v = Math.max(0, Number(m));
-    return Math.max(300, Math.min(720, 380 + v*8.2));
+  function buildGraphDataRect(levels, dims){
+    // y = elevation (m), x = dimension (m)
+    const {bottom, il, maxWL, egl} = levels;
+    const {Lb, Wb, Lwl, Wwl, Lberm, Wberm} = dims;
+
+    const xMax = Math.max(Lberm, Wberm, Lwl, Wwl, Lb, Wb) * 1.15;
+    const xMin = 0;
+
+    const lenLine = [
+      asPoint(Lb, bottom),
+      asPoint(Lwl, maxWL),
+      asPoint(Lberm, egl),
+    ];
+    const widLine = [
+      asPoint(Wb, bottom),
+      asPoint(Wwl, maxWL),
+      asPoint(Wberm, egl),
+    ];
+
+    const lvlIL   = makeHLine(il, xMin, xMax);
+    const lvlMax  = makeHLine(maxWL, xMin, xMax);
+    const lvlEGL  = makeHLine(egl, xMin, xMax);
+    const lvlBot  = makeHLine(bottom, xMin, xMax);
+
+    return {xMin,xMax, lenLine, widLine, lvlIL, lvlMax, lvlEGL, lvlBot};
   }
 
-  function drawRectSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Lberm,Wberm,Lwl,Wwl,Lb,Wb}){
-    const g = document.getElementById("gDraw");
+  function buildGraphDataCirc(levels, dims){
+    const {bottom, il, maxWL, egl} = levels;
+    const {Db, Dwl, Dberm} = dims;
 
-    // Layout anchors
-    const cx = 820, cy = 540;
-    const ox = 165, oy = -140;
-    const lift = 320;
+    const xMax = Math.max(Dberm, Dwl, Db) * 1.20;
+    const xMin = 0;
 
-    // Scale sizes
-    const topLpx = spanPx(Lberm);
-    const topWpx = spanPx(Wberm);
-    const wlLpx  = spanPx(Lwl);
-    const wlWpx  = spanPx(Wwl);
-    const botLpx = spanPx(Math.max(Lb,0));
-    const botWpx = spanPx(Math.max(Wb,0));
+    const diaLine = [
+      asPoint(Db, bottom),
+      asPoint(Dwl, maxWL),
+      asPoint(Dberm, egl),
+    ];
 
-    // Berm plane
-    const tA={x:cx-topLpx/2+ox, y:cy-topWpx/2+oy};
-    const tB={x:cx+topLpx/2+ox, y:cy-topWpx/2+oy};
-    const tC={x:cx+topLpx/2+ox, y:cy+topWpx/2+oy};
-    const tD={x:cx-topLpx/2+ox, y:cy+topWpx/2+oy};
+    const lvlIL   = makeHLine(il, xMin, xMax);
+    const lvlMax  = makeHLine(maxWL, xMin, xMax);
+    const lvlEGL  = makeHLine(egl, xMin, xMax);
+    const lvlBot  = makeHLine(bottom, xMin, xMax);
 
-    // Bottom plane
-    const bA={x:cx-botLpx/2, y:cy-botWpx/2+lift};
-    const bB={x:cx+botLpx/2, y:cy-botWpx/2+lift};
-    const bC={x:cx+botLpx/2, y:cy+botWpx/2+lift};
-    const bD={x:cx-botLpx/2, y:cy+botWpx/2+lift};
-
-    // Max WL plane (interpolated along the side slope)
-    // We place it visually between berm and bottom using ratio = H_WL / H_EGL
-    const r = (H_EGL>0) ? Math.max(0, Math.min(1, H_WL / H_EGL)) : 0;
-    const wlShift = r*lift;
-
-    const wA={x:cx-wlLpx/2 + (1-r)*ox, y:cy-wlWpx/2 + (1-r)*oy + wlShift};
-    const wB={x:cx+wlLpx/2 + (1-r)*ox, y:cy-wlWpx/2 + (1-r)*oy + wlShift};
-    const wC={x:cx+wlLpx/2 + (1-r)*ox, y:cy+wlWpx/2 + (1-r)*oy + wlShift};
-    const wD={x:cx-wlLpx/2 + (1-r)*ox, y:cy+wlWpx/2 + (1-r)*oy + wlShift};
-
-    // Title
-    const title = T(600,85,"Pond Sketch",64,1100,"#111","middle");
-
-    // Level box (big, simple)
-    const info =
-      `<g filter="url(#ds)">
-        ${R(60,140,470,310,26,"#fff","#111",5)}
-        ${T(95,205,"EGL (Berm)",34,1000)} ${T(320,205,`= ${fmt(egl,2)} m`,34,1000)}
-        ${T(95,260,"Max WL",34,1000)} ${T(320,260,`= ${fmt(maxWL,2)} m`,34,1000)}
-        ${T(95,315,"IL",34,1000)} ${T(320,315,`= ${fmt(il,2)} m`,34,1000)}
-        ${T(95,370,"Bottom",34,1000)} ${T(320,370,`= ${fmt(bottom,2)} m`,34,1000)}
-        ${T(95,425,"Freeboard",34,1000)} ${T(320,425,`= ${fmt(fb,2)} m`,34,1000)}
-      </g>`;
-
-    // Legend tags (NO extra notes)
-    const legend =
-      Tag(60,480,"UPPER @ BERM (EGL)","#e8f1ff","var(--berm)") +
-      Tag(60,565,"MAX WATER LEVEL","#f3e9ff","var(--wl)") +
-      Tag(60,650,"BOTTOM","#e9fff6","var(--bottom)") +
-      Tag(60,735,"DEPTHS","#fff3df","var(--depth)");
-
-    // 3D body
-    const body = `
-      <g filter="url(#ds)">
-        ${P(`${tA.x},${tA.y} ${tB.x},${tB.y} ${bB.x},${bB.y} ${bA.x},${bA.y}`,'url(#gWall)')}
-        ${P(`${tB.x},${tB.y} ${tC.x},${tC.y} ${bC.x},${bC.y} ${bB.x},${bB.y}`,'url(#gWall2)')}
-        ${P(`${tC.x},${tC.y} ${tD.x},${tD.y} ${bD.x},${bD.y} ${bC.x},${bC.y}`,'#dbe6f2')}
-        ${P(`${tD.x},${tD.y} ${tA.x},${tA.y} ${bA.x},${bA.y} ${bD.x},${bD.y}`,'#d2dbe7')}
-
-        <!-- Berm top -->
-        ${P(`${tA.x},${tA.y} ${tB.x},${tB.y} ${tC.x},${tC.y} ${tD.x},${tD.y}`,'url(#gSoil)',"#111",4,1)}
-
-        <!-- Max WL water surface (clear plane) -->
-        ${P(`${wA.x},${wA.y} ${wB.x},${wB.y} ${wC.x},${wC.y} ${wD.x},${wD.y}`,'url(#gWater)',"#111",4,0.92)}
-
-        <!-- Bottom outline -->
-        ${P(`${bA.x},${bA.y} ${bB.x},${bB.y} ${bC.x},${bC.y} ${bD.x},${bD.y}`,'rgba(0,0,0,0)',"#111",4,0.35)}
-      </g>
-    `;
-
-    // DIMENSIONS (VERY BIG + THICK + COLORED)
-    const dims = `
-      <!-- Berm Length -->
-      ${Dim(tA.x, tA.y-100, tB.x, tB.y-100, "var(--berm)","arrB",12)}
-      ${T((tA.x+tB.x)/2, tA.y-132,"UPPER LENGTH (EGL)",40,1100,"#111","middle")}
-      ${T((tA.x+tB.x)/2, tA.y-86,`${fmt(Lberm,2)} m`,40,1100,"var(--berm)","middle")}
-
-      <!-- Berm Width -->
-      ${Dim(tC.x+120, tB.y, tC.x+120, tC.y, "var(--berm)","arrB",12)}
-      <g transform="translate(${tC.x+175},${(tB.y+tC.y)/2}) rotate(90)">
-        ${T(0,-10,"UPPER WIDTH (EGL)",40,1100,"#111","middle")}
-        ${T(0,38,`${fmt(Wberm,2)} m`,40,1100,"var(--berm)","middle")}
-      </g>
-
-      <!-- WL Length -->
-      ${Dim(wA.x, wA.y-90, wB.x, wB.y-90, "var(--wl)","arrW",12)}
-      ${T((wA.x+wB.x)/2, wA.y-120,"LENGTH @ MAX WL",38,1100,"#111","middle")}
-      ${T((wA.x+wB.x)/2, wA.y-78,`${fmt(Lwl,2)} m`,38,1100,"var(--wl)","middle")}
-
-      <!-- Bottom Length -->
-      ${Dim(bA.x, bA.y+145, bB.x, bB.y+145, "var(--bottom)","arrG",12)}
-      ${T((bA.x+bB.x)/2, bA.y+114,"BOTTOM LENGTH",38,1100,"#111","middle")}
-      ${T((bA.x+bB.x)/2, bA.y+162,`${fmt(Lb,2)} m`,38,1100,"var(--bottom)","middle")}
-
-      <!-- Bottom Width -->
-      ${Dim(bC.x+120, bB.y, bC.x+120, bC.y, "var(--bottom)","arrG",12)}
-      <g transform="translate(${bC.x+175},${(bB.y+bC.y)/2}) rotate(90)">
-        ${T(0,-10,"BOTTOM WIDTH",38,1100,"#111","middle")}
-        ${T(0,36,`${fmt(Wb,2)} m`,38,1100,"var(--bottom)","middle")}
-      </g>
-
-      <!-- Depths -->
-      ${Dim(tA.x-200, tA.y+30, tA.x-200, bA.y-10, "var(--depth)","arrD",12)}
-      ${T(tA.x-200, (tA.y+30+bA.y-10)/2 - 12,"DEPTH → EGL",40,1100,"#111","middle")}
-      ${T(tA.x-200, (tA.y+30+bA.y-10)/2 + 38,`${fmt(H_EGL,2)} m`,40,1100,"var(--depth)","middle")}
-
-      ${Dim(wA.x-210, wA.y+20, wA.x-210, bA.y-10, "var(--depth)","arrD",12)}
-      ${T(wA.x-210, (wA.y+20+bA.y-10)/2 - 12,"DEPTH → MAX WL",38,1100,"#111","middle")}
-      ${T(wA.x-210, (wA.y+20+bA.y-10)/2 + 36,`${fmt(H_WL,2)} m`,38,1100,"var(--depth)","middle")}
-    `;
-
-    g.innerHTML = title + info + legend + body + dims;
+    return {xMin,xMax, diaLine, lvlIL, lvlMax, lvlEGL, lvlBot};
   }
 
-  function drawCircSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Dberm,Dwl,Dbottom}){
-    const g = document.getElementById("gDraw");
+  function ensureChart(){
+    const ctx = $("chartGeom").getContext("2d");
+    if(chartGeom) return;
 
-    const title = T(600,85,"Pond Sketch",64,1100,"#111","middle");
-
-    const info =
-      `<g filter="url(#ds)">
-        ${R(60,140,470,310,26,"#fff","#111",5)}
-        ${T(95,205,"EGL (Berm)",34,1000)} ${T(320,205,`= ${fmt(egl,2)} m`,34,1000)}
-        ${T(95,260,"Max WL",34,1000)} ${T(320,260,`= ${fmt(maxWL,2)} m`,34,1000)}
-        ${T(95,315,"IL",34,1000)} ${T(320,315,`= ${fmt(il,2)} m`,34,1000)}
-        ${T(95,370,"Bottom",34,1000)} ${T(320,370,`= ${fmt(bottom,2)} m`,34,1000)}
-        ${T(95,425,"Freeboard",34,1000)} ${T(320,425,`= ${fmt(fb,2)} m`,34,1000)}
-      </g>`;
-
-    const legend =
-      Tag(60,480,"UPPER @ BERM (EGL)","#e8f1ff","var(--berm)") +
-      Tag(60,565,"MAX WATER LEVEL","#f3e9ff","var(--wl)") +
-      Tag(60,650,"BOTTOM","#e9fff6","var(--bottom)") +
-      Tag(60,735,"DEPTHS","#fff3df","var(--depth)");
-
-    // Cylinder/frustum ellipses
-    const cx = 860, cy = 520;
-    const ox = 175, oy = -140;
-    const lift = 320;
-
-    const topDpx = spanPx(Dberm);
-    const wlDpx  = spanPx(Dwl);
-    const botDpx = spanPx(Math.max(Dbottom,0));
-
-    const r = (H_EGL>0) ? Math.max(0, Math.min(1, H_WL/H_EGL)) : 0;
-    const wlShift = r*lift;
-
-    const tc = {x:cx+ox, y:cy+oy};
-    const wc = {x:cx + (1-r)*ox, y:cy + (1-r)*oy + wlShift};
-    const bc = {x:cx, y:cy+lift};
-
-    const topRx = topDpx/2, topRy = topDpx*0.18;
-    const wlRx  = wlDpx/2,  wlRy  = wlDpx*0.18;
-    const botRx = botDpx/2, botRy = botDpx*0.18;
-
-    const body = `
-      <g filter="url(#ds)">
-        <path d="
-          M ${tc.x-topRx} ${tc.y}
-          C ${tc.x-topRx} ${tc.y+topRy} ${tc.x+topRx} ${tc.y+topRy} ${tc.x+topRx} ${tc.y}
-          L ${bc.x+botRx} ${bc.y}
-          C ${bc.x+botRx} ${bc.y+botRy} ${bc.x-botRx} ${bc.y+botRy} ${bc.x-botRx} ${bc.y}
-          Z"
-          fill="url(#gWall)" stroke="#111" stroke-width="4"/>
-
-        <ellipse cx="${tc.x}" cy="${tc.y}" rx="${topRx}" ry="${topRy}" fill="url(#gSoil)" stroke="#111" stroke-width="4"/>
-
-        <ellipse cx="${wc.x}" cy="${wc.y}" rx="${wlRx}" ry="${wlRy}" fill="url(#gWater)" stroke="#111" stroke-width="4" opacity="0.92"/>
-
-        <ellipse cx="${bc.x}" cy="${bc.y}" rx="${botRx}" ry="${botRy}" fill="none" stroke="#111" stroke-width="4" opacity="0.35"/>
-      </g>
-    `;
-
-    const dims = `
-      ${Dim(tc.x-topRx, tc.y-100, tc.x+topRx, tc.y-100, "var(--berm)","arrB",12)}
-      ${T(tc.x, tc.y-132,"UPPER DIAMETER (EGL)",40,1100,"#111","middle")}
-      ${T(tc.x, tc.y-86,`${fmt(Dberm,2)} m`,40,1100,"var(--berm)","middle")}
-
-      ${Dim(wc.x-wlRx, wc.y-90, wc.x+wlRx, wc.y-90, "var(--wl)","arrW",12)}
-      ${T(wc.x, wc.y-120,"DIAMETER @ MAX WL",38,1100,"#111","middle")}
-      ${T(wc.x, wc.y-78,`${fmt(Dwl,2)} m`,38,1100,"var(--wl)","middle")}
-
-      ${Dim(bc.x-botRx, bc.y+145, bc.x+botRx, bc.y+145, "var(--bottom)","arrG",12)}
-      ${T(bc.x, bc.y+114,"BOTTOM DIAMETER",38,1100,"#111","middle")}
-      ${T(bc.x, bc.y+162,`${fmt(Dbottom,2)} m`,38,1100,"var(--bottom)","middle")}
-
-      ${Dim(tc.x-topRx-210, tc.y+30, tc.x-topRx-210, bc.y-10, "var(--depth)","arrD",12)}
-      ${T(tc.x-topRx-210, (tc.y+30+bc.y-10)/2 - 12,"DEPTH → EGL",40,1100,"#111","middle")}
-      ${T(tc.x-topRx-210, (tc.y+30+bc.y-10)/2 + 38,`${fmt(H_EGL,2)} m`,40,1100,"var(--depth)","middle")}
-
-      ${Dim(wc.x-wlRx-220, wc.y+20, wc.x-wlRx-220, bc.y-10, "var(--depth)","arrD",12)}
-      ${T(wc.x-wlRx-220, (wc.y+20+bc.y-10)/2 - 12,"DEPTH → MAX WL",38,1100,"#111","middle")}
-      ${T(wc.x-wlRx-220, (wc.y+20+bc.y-10)/2 + 36,`${fmt(H_WL,2)} m`,38,1100,"var(--depth)","middle")}
-    `;
-
-    g.innerHTML = title + info + legend + body + dims;
+    chartGeom = new Chart(ctx, {
+      type: "scatter",
+      data: { datasets: [] },
+      options: {
+        responsive: true,
+        animation: false,
+        parsing: false,
+        plugins: {
+          legend: { labels: { color: "#e7eefc", font: { size: 14, weight: "700" } } },
+          tooltip: {
+            callbacks: {
+              label: (c) => {
+                const x = c.raw?.x, y = c.raw?.y;
+                return `${c.dataset.label}: ${fmt(x,2)} m @ Elev ${fmt(y,2)} m`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: "Dimension (m)", color: "#a8b7d6", font: { size: 14, weight:"800" } },
+            ticks: { color: "#a8b7d6" },
+            grid: { color: "rgba(38,54,87,.35)" }
+          },
+          y: {
+            title: { display: true, text: "Elevation (m)", color: "#a8b7d6", font: { size: 14, weight:"800" } },
+            ticks: { color: "#a8b7d6" },
+            grid: { color: "rgba(38,54,87,.35)" }
+          }
+        }
+      }
+    });
   }
 
-  function safeSketchFromInputs(){
-    const egl = Number($("egl").value);
-    const il  = Number($("il").value);
-    const below = Math.max(Number($("belowIL").value), 0.30);
-    const fb  = Number($("fb").value);
+  function setChartRange(xMin, xMax, yMin, yMax){
+    chartGeom.options.scales.x.min = xMin;
+    chartGeom.options.scales.x.max = xMax;
+    chartGeom.options.scales.y.min = yMin;
+    chartGeom.options.scales.y.max = yMax;
+  }
 
-    const g = document.getElementById("gDraw");
-    if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)){ g.innerHTML=""; return; }
+  function updateChartDatasets(datasets){
+    chartGeom.data.datasets = datasets;
+    chartGeom.update();
+  }
 
-    const bottom = il - below;
-    const maxWL = egl - fb;
+  function updateGraphFromInputs(){
+    try{
+      ensureChart();
 
-    const H_EGL = egl - bottom;     // total depth to berm
-    const H_WL  = maxWL - bottom;   // depth to max WL
-    if(!(H_EGL>0 && H_WL>0 && H_EGL>=H_WL)){ g.innerHTML=""; return; }
+      const egl = Number($("egl").value);
+      const il  = Number($("il").value);
+      const below = Math.max(Number($("belowIL").value), 0.30);
+      const fb  = Number($("fb").value);
 
-    const shape = $("shape").value;
+      if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)) throw new Error("bad");
 
-    if(shape==="rect"){
-      const Lberm = Number($("ltop").value);
-      const Wberm = Number($("wtop").value);
-      const Z = Number($("z").value);
-      if(!(isFinite(Lberm)&&isFinite(Wberm)&&isFinite(Z))) { g.innerHTML=""; return; }
+      const bottom = il - below;
+      const maxWL = egl - fb;
 
-      const Lb = Lberm - 2*Z*H_EGL;
-      const Wb = Wberm - 2*Z*H_EGL;
+      const H_EGL = egl - bottom;
+      const H_WL  = maxWL - bottom;
+      if(!(H_EGL>0 && H_WL>0 && H_EGL>=H_WL)) throw new Error("bad");
 
-      const Lwl = (Lb>0) ? (Lb + 2*Z*H_WL) : 0;
-      const Wwl = (Wb>0) ? (Wb + 2*Z*H_WL) : 0;
+      const yMin = bottom - 0.15*(egl-bottom);
+      const yMax = egl + 0.10*(egl-bottom);
 
-      drawRectSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Lberm,Wberm,Lwl,Wwl,Lb:Math.max(Lb,0),Wb:Math.max(Wb,0)});
-    } else {
-      const Dberm = Number($("dtop").value);
-      const Z = Number($("zc").value);
-      if(!(isFinite(Dberm)&&isFinite(Z))) { g.innerHTML=""; return; }
+      const shape = $("shape").value;
 
-      const Dbottom = Dberm - 2*Z*H_EGL;
-      const Dwl = (Dbottom>0) ? (Dbottom + 2*Z*H_WL) : 0;
+      if(shape === "rect"){
+        const Lberm = Number($("ltop").value);
+        const Wberm = Number($("wtop").value);
+        const Z = Number($("z").value);
+        if(!(Lberm>0 && Wberm>0 && Z>=0)) throw new Error("bad");
 
-      drawCircSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Dberm,Dwl,Dbottom:Math.max(Dbottom,0)});
+        const Lb = Lberm - 2*Z*H_EGL;
+        const Wb = Wberm - 2*Z*H_EGL;
+        if(!(Lb>0 && Wb>0)) throw new Error("dim");
+
+        const Lwl = Lb + 2*Z*H_WL;
+        const Wwl = Wb + 2*Z*H_WL;
+
+        const gd = buildGraphDataRect(
+          {bottom, il, maxWL, egl},
+          {Lb,Wb,Lwl,Wwl,Lberm,Wberm}
+        );
+
+        setChartRange(gd.xMin, gd.xMax, yMin, yMax);
+
+        updateChartDatasets([
+          {
+            label: "Length",
+            data: gd.lenLine,
+            showLine: true,
+            borderWidth: 5,
+            pointRadius: 6
+          },
+          {
+            label: "Width",
+            data: gd.widLine,
+            showLine: true,
+            borderWidth: 5,
+            pointRadius: 6
+          },
+          { label: "EGL (Berm)", data: gd.lvlEGL, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "Max WL",      data: gd.lvlMax, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "IL",          data: gd.lvlIL,  showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "Bottom",      data: gd.lvlBot, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+        ]);
+
+        // force colors (Chart.js default colors are fine, but we want strong)
+        chartGeom.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--berm").trim();
+        chartGeom.data.datasets[0].backgroundColor = chartGeom.data.datasets[0].borderColor;
+
+        chartGeom.data.datasets[1].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--wl").trim();
+        chartGeom.data.datasets[1].backgroundColor = chartGeom.data.datasets[1].borderColor;
+
+        const lvlCol = getComputedStyle(document.documentElement).getPropertyValue("--levels").trim();
+        for(let i=2;i<6;i++){
+          chartGeom.data.datasets[i].borderColor = lvlCol;
+        }
+        chartGeom.update();
+      } else {
+        const Dberm = Number($("dtop").value);
+        const Z = Number($("zc").value);
+        if(!(Dberm>0 && Z>=0)) throw new Error("bad");
+
+        const Db = Dberm - 2*Z*H_EGL;
+        if(!(Db>0)) throw new Error("dim");
+
+        const Dwl = Db + 2*Z*H_WL;
+
+        const gd = buildGraphDataCirc(
+          {bottom, il, maxWL, egl},
+          {Db, Dwl, Dberm}
+        );
+
+        setChartRange(gd.xMin, gd.xMax, yMin, yMax);
+
+        updateChartDatasets([
+          {
+            label: "Diameter",
+            data: gd.diaLine,
+            showLine: true,
+            borderWidth: 5,
+            pointRadius: 6
+          },
+          { label: "EGL (Berm)", data: gd.lvlEGL, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "Max WL",      data: gd.lvlMax, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "IL",          data: gd.lvlIL,  showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+          { label: "Bottom",      data: gd.lvlBot, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
+        ]);
+
+        chartGeom.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--berm").trim();
+        chartGeom.data.datasets[0].backgroundColor = chartGeom.data.datasets[0].borderColor;
+
+        const lvlCol = getComputedStyle(document.documentElement).getPropertyValue("--levels").trim();
+        for(let i=1;i<5;i++){
+          chartGeom.data.datasets[i].borderColor = lvlCol;
+        }
+        chartGeom.update();
+      }
+
+    } catch(e){
+      if(chartGeom){
+        chartGeom.data.datasets = [];
+        chartGeom.update();
+      }
     }
   }
 
-  // ---------------------- CALC ----------------------
+  // ---------------- CALC ----------------
   function calc(){
     try{
       const egl = Number($("egl").value);
@@ -720,55 +651,48 @@
       const bottom = il - below;
       const maxWL  = egl - fb;
 
-      const H_EGL = egl - bottom;     // used for bottom dimension derivation
-      const H_WL  = maxWL - bottom;   // used for storage up to max WL
+      const H_EGL = egl - bottom;     // for bottom dims
+      const H_WL  = maxWL - bottom;   // for storage up to max WL
       if(!(H_EGL>0 && H_WL>0 && H_EGL>=H_WL)) throw new Error("Invalid levels.");
 
       const shape = $("shape").value;
 
       let Vtot=0, Vbelow=0;
       let Lberm=NaN, Wberm=NaN, Lb=NaN, Wb=NaN, Lwl=NaN, Wwl=NaN;
-      let Dberm=NaN, Dbottom=NaN, Dwl=NaN;
+      let Dberm=NaN, Db=NaN, Dwl=NaN;
       let Z=NaN;
 
       if(shape === "rect"){
         Lberm = Number($("ltop").value);
         Wberm = Number($("wtop").value);
         Z = Number($("z").value);
-        if(!(Lberm>0 && Wberm>0 && Z>=0)) throw new Error("Check rectangular berm dimensions and side slope.");
+        if(!(Lberm>0 && Wberm>0 && Z>=0)) throw new Error("Check berm dimensions and side slope.");
 
-        // Bottom derived from berm dims using total depth to EGL
         Lb = Lberm - 2*Z*H_EGL;
         Wb = Wberm - 2*Z*H_EGL;
-
         if(!(Lb > 0 && Wb > 0)) throw new Error("Increase the pond dimension.");
 
-        // Surface at Max WL (for display)
         Lwl = Lb + 2*Z*H_WL;
         Wwl = Wb + 2*Z*H_WL;
 
-        // Storage up to Max WL depth H_WL
         Vtot = pondVolumeRect(Lb, Wb, Z, H_WL);
 
-        // Storage below IL (bottom -> IL)
         const Hbelow = Math.max(0, il - bottom);
         if(Hbelow > 0){
           const hUse = Math.min(Hbelow, H_WL);
           Vbelow = pondVolumeRect(Lb, Wb, Z, hUse);
         }
-
-        drawRectSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Lberm,Wberm,Lwl,Wwl,Lb,Wb});
       } else {
         Dberm = Number($("dtop").value);
         Z = Number($("zc").value);
-        if(!(Dberm>0 && Z>=0)) throw new Error("Check circular berm diameter and side slope.");
+        if(!(Dberm>0 && Z>=0)) throw new Error("Check berm diameter and side slope.");
 
-        Dbottom = Dberm - 2*Z*H_EGL;
-        if(!(Dbottom > 0)) throw new Error("Increase the pond dimension.");
+        Db = Dberm - 2*Z*H_EGL;
+        if(!(Db > 0)) throw new Error("Increase the pond dimension.");
 
-        Dwl = Dbottom + 2*Z*H_WL;
+        Dwl = Db + 2*Z*H_WL;
 
-        const r0 = Dbottom/2;
+        const r0 = Db/2;
         Vtot = pondVolumeCirc(r0, Z, H_WL);
 
         const Hbelow = Math.max(0, il - bottom);
@@ -776,8 +700,6 @@
           const hUse = Math.min(Hbelow, H_WL);
           Vbelow = pondVolumeCirc(r0, Z, hUse);
         }
-
-        drawCircSketch({egl,maxWL,il,bottom,fb,H_EGL,H_WL,Dberm,Dwl,Dbottom});
       }
 
       const Vactive = Math.max(0, Vtot - Vbelow);
@@ -785,7 +707,6 @@
       // Required volume
       const mode = $("mode").value;
       let Vreq = 0;
-      let note = "";
 
       if(mode==="scs"){
         const areaHa = Number($("areaHa").value);
@@ -798,7 +719,6 @@
         const areaM2 = areaHa * 10000;
         Vreq = (qmm/1000) * areaM2;
         Vreq *= (1 - loss/100);
-        note = `SCS runoff depth ≈ ${fmt(qmm,1)} mm`;
       }
       else if(mode==="inflow"){
         const Qp = Number($("qp").value);
@@ -809,7 +729,6 @@
 
         Vreq = 0.5 * Qp * (Tb*60);
         Vreq *= (1 - loss/100);
-        note = `Triangular inflow volume`;
       }
       else {
         const vuser = Number($("vreqUser").value);
@@ -817,7 +736,6 @@
         if(!(vuser>=0)) throw new Error("Enter a valid required volume (m³).");
 
         Vreq = vuser * (1 - loss/100);
-        note = `Direct required volume`;
       }
 
       const pass = (Vtot >= Vreq);
@@ -827,6 +745,7 @@
       $("kMaxWL").textContent  = fmt(maxWL,2);
       $("kHEGL").textContent   = fmt(H_EGL,2);
       $("kHWL").textContent    = fmt(H_WL,2);
+      $("kFB").textContent     = fmt(fb,2);
 
       $("kTopL").textContent = isFinite(Lberm) ? fmt(Lberm,2) : "–";
       $("kTopW").textContent = isFinite(Wberm) ? fmt(Wberm,2) : "–";
@@ -836,7 +755,7 @@
       $("kLowW").textContent = isFinite(Wb)    ? fmt(Wb,2)    : "–";
 
       $("kTopD").textContent = isFinite(Dberm) ? fmt(Dberm,2) : "–";
-      $("kLowD").textContent = isFinite(Dbottom)? fmt(Dbottom,2): "–";
+      $("kLowD").textContent = isFinite(Db)    ? fmt(Db,2)    : "–";
 
       $("kVtot").textContent   = fmt(Vtot,0);
       $("kVbelow").textContent = fmt(Vbelow,0);
@@ -845,7 +764,6 @@
       $("kVreq").textContent   = fmt(Vreq,0);
       $("kPass").textContent   = pass ? "PASS" : "FAIL";
       setPassColor(pass);
-      $("kNote").textContent   = note;
 
       if(pass){
         setMsg("PASS: Pond storage at max WL is ≥ required volume.");
@@ -855,12 +773,14 @@
         setStatus(false, "FAIL");
       }
 
+      updateGraphFromInputs();
+
     } catch(e){
       setMsg(e.message || String(e));
       $("kPass").textContent = "–";
       $("kPass").classList.remove("pass","fail");
       setStatus(null, "—");
-      safeSketchFromInputs();
+      updateGraphFromInputs();
     }
   }
 
@@ -896,14 +816,14 @@
     toggleShape();
     setMsg("Ready.");
     setStatus(null, "—");
-    safeSketchFromInputs();
+    updateGraphFromInputs();
   }
 
-  function bindLiveSketch(){
-    const ids = ["egl","il","belowIL","fb","shape","ltop","wtop","z","dtop","zc"];
+  function bindLiveGraph(){
+    const ids = ["mode","egl","il","belowIL","fb","shape","ltop","wtop","z","dtop","zc"];
     ids.forEach(id=>{
-      $(id).addEventListener("input", safeSketchFromInputs);
-      $(id).addEventListener("change", safeSketchFromInputs);
+      $(id).addEventListener("input", updateGraphFromInputs);
+      $(id).addEventListener("change", updateGraphFromInputs);
     });
   }
 
@@ -914,8 +834,8 @@
 
   toggleMode();
   toggleShape();
-  bindLiveSketch();
-  safeSketchFromInputs();
+  bindLiveGraph();
+  updateGraphFromInputs();
   setStatus(null, "—");
   setMsg("Ready.");
 </script>
