@@ -29,16 +29,15 @@
                  linear-gradient(160deg,#070c16,#0b1220 45%,#070c16);
       color:var(--txt);
     }
-    .wrap{max-width:1180px;margin:0 auto;padding:18px}
+    .wrap{max-width:1400px;margin:0 auto;padding:18px}
+
     .topbar{
       display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;
       margin-bottom:14px;
     }
-    .title{
-      display:flex;flex-direction:column;gap:6px;
-    }
+    .title{display:flex;flex-direction:column;gap:6px}
     h1{margin:0;font-size:26px;letter-spacing:.2px}
-    .subtitle{margin:0;color:var(--muted);max-width:760px;line-height:1.35}
+    .subtitle{margin:0;color:var(--muted);max-width:900px;line-height:1.35}
     .pillrow{display:flex;gap:8px;flex-wrap:wrap}
     .pill{
       font-size:12px;color:var(--muted);
@@ -47,8 +46,15 @@
       padding:6px 10px;border-radius:999px;
     }
 
-    .grid{display:grid;grid-template-columns: 1.05fr 0.95fr; gap:16px}
-    @media(max-width:980px){ .grid{grid-template-columns:1fr} }
+    /* 3 columns */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media(max-width:1200px){ .grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:820px){ .grid{grid-template-columns:1fr} }
 
     .card{
       background:var(--card);
@@ -103,7 +109,8 @@
       line-height:1.35;
     }
 
-    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    @media(max-width:1200px){ .kpis{grid-template-columns:repeat(3,1fr)} }
     @media(max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} }
     @media(max-width:520px){ .kpis{grid-template-columns:1fr} }
 
@@ -138,7 +145,7 @@
       padding:10px;
       overflow:hidden;
     }
-    .sketchNote{margin:8px 0 0;color:var(--muted);font-size:12px}
+    .sketchNote{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
     svg{width:100%;height:auto;display:block}
     .svgtxt{font-family:system-ui,Segoe UI,Roboto,Arial}
   </style>
@@ -150,14 +157,13 @@
       <div class="title">
         <h1>Pond Volume Calculator</h1>
         <p class="subtitle">
-          Enter <b>upper pond dimensions at Max WL</b>. The calculator derives <b>lower (bottom) dimensions</b> using side slope and depth,
-          then checks storage against required stormwater volume (SCS / inflow / direct volume). Includes a quick sketch of levels and geometry.
+          3-column layout: <b>Inputs</b> → <b>Results</b> → <b>3D Sketch</b>.
+          You enter <b>upper dimensions at Max WL</b>; the calculator derives <b>lower (bottom) dimensions</b> from depth and side slope.
         </p>
         <div class="pillrow">
           <span class="pill">Upper dims → bottom dims</span>
-          <span class="pill">SCS CN runoff volume</span>
-          <span class="pill">Triangular inflow volume</span>
-          <span class="pill">Direct required volume</span>
+          <span class="pill">SCS / Inflow / Direct volume</span>
+          <span class="pill">Auto “Increase pond dimension” check</span>
         </div>
       </div>
       <div class="pillrow">
@@ -167,7 +173,7 @@
     </div>
 
     <div class="grid">
-      <!-- LEFT: INPUTS -->
+      <!-- 1) INPUTS -->
       <div class="card">
         <div class="splitHead">
           <h2>Inputs</h2>
@@ -262,7 +268,7 @@
 
         <div class="hr"></div>
 
-        <h2>3) Geometry</h2>
+        <h2>3) Geometry (Upper dims input)</h2>
         <div class="row">
           <div style="flex:2">
             <label>Shape</label>
@@ -287,7 +293,7 @@
             <input id="z" type="number" step="0.1" value="3" min="0">
           </div>
           <div>
-            <label class="muted">Bottom dimensions are calculated</label>
+            <label class="muted">Bottom dims</label>
             <input disabled value="Auto-calculated">
           </div>
         </div>
@@ -302,7 +308,7 @@
             <input id="zc" type="number" step="0.1" value="3" min="0">
           </div>
           <div>
-            <label class="muted">Bottom diameter is calculated</label>
+            <label class="muted">Bottom diameter</label>
             <input disabled value="Auto-calculated">
           </div>
           <div></div>
@@ -316,10 +322,10 @@
         <div id="msg" class="msg">Ready.</div>
       </div>
 
-      <!-- RIGHT: RESULTS + SKETCH -->
+      <!-- 2) RESULTS -->
       <div class="card">
         <div class="splitHead">
-          <h2>Results & Sketch</h2>
+          <h2>Results</h2>
           <span id="statusTag" class="tag">—</span>
         </div>
 
@@ -327,13 +333,15 @@
           <div class="kpi"><div class="t">Pond Bottom (m)</div><div id="kBottom" class="v">–</div></div>
           <div class="kpi"><div class="t">Max Water Level (m)</div><div id="kMaxWL" class="v">–</div></div>
           <div class="kpi"><div class="t">Available Depth (m)</div><div id="kDepth" class="v">–</div></div>
+          <div class="kpi"><div class="t">Freeboard (m)</div><div id="kFB" class="v">–</div></div>
 
           <div class="kpi"><div class="t">Upper Length @ Max WL (m)</div><div id="kTopL" class="v">–</div></div>
           <div class="kpi"><div class="t">Upper Width @ Max WL (m)</div><div id="kTopW" class="v">–</div></div>
-          <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
 
           <div class="kpi"><div class="t">Lower Length (Bottom) (m)</div><div id="kLowL" class="v">–</div></div>
           <div class="kpi"><div class="t">Lower Width (Bottom) (m)</div><div id="kLowW" class="v">–</div></div>
+
+          <div class="kpi"><div class="t">Upper Diameter @ Max WL (m)</div><div id="kTopD" class="v">–</div></div>
           <div class="kpi"><div class="t">Lower Diameter (Bottom) (m)</div><div id="kLowD" class="v">–</div></div>
 
           <div class="kpi"><div class="t">Total Storage @ Max WL (m³)</div><div id="kVtot" class="v">–</div></div>
@@ -347,42 +355,50 @@
 
         <div class="hr"></div>
 
+        <p class="muted small" style="margin:0">
+          Rectangular: <b>Lb = Ltop − 2·Z·H</b>, <b>Wb = Wtop − 2·Z·H</b><br>
+          Circular: <b>Dbottom = Dtop − 2·Z·H</b><br>
+          If any lower dimension ≤ 0 → <b>Increase the pond dimension</b>
+        </p>
+      </div>
+
+      <!-- 3) SKETCH -->
+      <div class="card">
+        <div class="splitHead">
+          <h2>3D Sketch (Clear Dimensions)</h2>
+          <span class="tag">Illustrative</span>
+        </div>
+
         <div class="sketchWrap">
-          <svg id="pondSketch" viewBox="0 0 900 520" role="img" aria-label="Pond sketch">
+          <svg id="pondSketch" viewBox="0 0 980 640" role="img" aria-label="Pond sketch">
             <defs>
-              <linearGradient id="waterGrad" x1="0" x2="0" y1="0" y2="1">
+              <linearGradient id="soil" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="rgba(231,238,252,.14)"/>
+                <stop offset="1" stop-color="rgba(231,238,252,.05)"/>
+              </linearGradient>
+              <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0" stop-color="rgba(31,94,255,.55)"/>
                 <stop offset="1" stop-color="rgba(31,94,255,.18)"/>
               </linearGradient>
-              <linearGradient id="soilGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="rgba(231,238,252,.12)"/>
-                <stop offset="1" stop-color="rgba(231,238,252,.04)"/>
-              </linearGradient>
             </defs>
 
-            <!-- frame -->
-            <rect x="12" y="12" width="876" height="496" rx="18" ry="18" fill="rgba(11,20,40,.25)" stroke="rgba(38,54,87,.9)" stroke-width="2"/>
+            <rect x="12" y="12" width="956" height="616" rx="18" fill="rgba(11,20,40,.22)" stroke="rgba(38,54,87,.9)" stroke-width="2"></rect>
 
-            <!-- area -->
             <g id="gDraw"></g>
 
-            <!-- legend -->
-            <g class="svgtxt" font-size="14" fill="rgba(168,183,214,.92)">
-              <circle cx="40" cy="480" r="6" fill="rgba(31,94,255,.55)"></circle>
-              <text x="55" y="485">Water</text>
-              <rect x="120" y="474" width="12" height="12" fill="url(#soilGrad)" stroke="rgba(231,238,252,.15)"></rect>
-              <text x="140" y="485">Pond Section</text>
+            <g class="svgtxt" font-size="13" fill="rgba(168,183,214,.95)">
+              <circle cx="44" cy="600" r="6" fill="rgba(31,94,255,.55)"></circle>
+              <text x="60" y="605">Water</text>
+              <rect x="128" y="594" width="12" height="12" fill="url(#soil)" stroke="rgba(231,238,252,.15)"></rect>
+              <text x="148" y="605">Pond Body</text>
+              <line x1="250" y1="600" x2="280" y2="600" stroke="rgba(255,255,255,.55)" stroke-width="2"></line>
+              <text x="290" y="605">Level/Dimension lines</text>
             </g>
           </svg>
-          <div class="sketchNote">Sketch is illustrative (not to scale in plan). It shows the section profile, EGL, Max WL, IL, bottom, freeboard and key dimensions.</div>
+          <div class="sketchNote">
+            Sketch shows: EGL, Max WL, IL, Bottom, Freeboard, Depth (H) and clear <b>Upper/Lower Length & Width</b> like a simple 3D model.
+          </div>
         </div>
-
-        <div class="hr"></div>
-        <p class="muted small" style="margin:0">
-          Rectangular: <b>Lb = Ltop − 2·Z·H</b>, <b>Wb = Wtop − 2·Z·H</b>.<br>
-          Circular: <b>r0 = (Dtop/2) − Z·H</b>, Dbottom = 2·r0.<br>
-          If any lower dimension ≤ 0 → <b>Increase the pond dimension</b>.
-        </p>
       </div>
     </div>
   </div>
@@ -418,7 +434,6 @@
     const s = $("shape").value;
     $("rectBox").style.display = (s==="rect") ? "grid" : "none";
     $("circBox").style.display = (s==="circ") ? "grid" : "none";
-    // redraw sketch even before calc (use current inputs)
     safeSketchFromInputs();
   }
 
@@ -439,186 +454,272 @@
 
   function setMsg(txt){ $("msg").textContent = txt; }
 
-  function line(y, label, color="rgba(168,183,214,.85)", dash=false){
+  // ---------- SVG Helpers ----------
+  function svgText(x,y,txt,size=14,fill="rgba(231,238,252,.92)",anchor="start"){
+    return `<text class="svgtxt" x="${x}" y="${y}" font-size="${size}" fill="${fill}" text-anchor="${anchor}">${escapeXml(txt)}</text>`;
+  }
+  function escapeXml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+  }
+  function svgLine(x1,y1,x2,y2,stroke="rgba(255,255,255,.55)",w=2,dash=false){
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${w}" ${dash ? 'stroke-dasharray="8 6"' : ""}/>`;
+  }
+  function svgRect(x,y,w,h,rx=10,fill="rgba(11,20,40,.65)",stroke="rgba(38,54,87,.85)"){
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}"/>`;
+  }
+  function dimArrow(p1, p2, label, opts={}){
+    const {color="rgba(231,238,252,.75)", textBg=true} = opts;
+    const x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
+    const dx=x2-x1, dy=y2-y1;
+    const len=Math.hypot(dx,dy) || 1;
+    const ux=dx/len, uy=dy/len;
+    const nx=-uy, ny=ux;
+    const ah=10; // arrow head size
+
+    const a1 = {x:x1+ux*ah, y:y1+uy*ah};
+    const a2 = {x:x2-ux*ah, y:y2-uy*ah};
+
+    const head1 = [
+      {x:x1, y:y1},
+      {x:x1+ux*ah+nx*6, y:y1+uy*ah+ny*6},
+      {x:x1+ux*ah-nx*6, y:y1+uy*ah-ny*6},
+    ];
+    const head2 = [
+      {x:x2, y:y2},
+      {x:x2-ux*ah+nx*6, y:y2-uy*ah+ny*6},
+      {x:x2-ux*ah-nx*6, y:y2-uy*ah-ny*6},
+    ];
+
+    const mid = {x:(x1+x2)/2, y:(y1+y2)/2};
+    const tx = mid.x + nx*14;
+    const ty = mid.y + ny*14;
+
+    const lblW = Math.max(120, label.length*7.2);
+    const lblH = 22;
+    const bx = tx - lblW/2;
+    const by = ty - 16;
+
     return `
       <g class="svgtxt">
-        <line x1="70" x2="830" y1="${y}" y2="${y}" stroke="${color}" stroke-width="2" ${dash ? 'stroke-dasharray="8 6"' : ""}/>
-        <rect x="70" y="${y-18}" width="${Math.max(110, label.length*7)}" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
-        <text x="82" y="${y-2}" font-size="14" fill="rgba(231,238,252,.92)">${label}</text>
+        ${svgLine(a1.x,a1.y,a2.x,a2.y,color,2,false)}
+        <polygon points="${head1.map(p=>`${p.x},${p.y}`).join(" ")}" fill="${color}"></polygon>
+        <polygon points="${head2.map(p=>`${p.x},${p.y}`).join(" ")}" fill="${color}"></polygon>
+        ${textBg ? svgRect(bx,by,lblW,lblH,10,"rgba(11,20,40,.68)","rgba(38,54,87,.85)") : ""}
+        ${svgText(tx,ty,label,13,"rgba(231,238,252,.92)","middle")}
       </g>
     `;
   }
 
-  function arrowH(y, x1, x2, label){
-    const mid = (x1+x2)/2;
-    const minx = Math.min(x1,x2), maxx = Math.max(x1,x2);
+  function levelLine(y, label, color, dash){
+    const w = Math.max(130, label.length*7.2);
     return `
       <g class="svgtxt">
-        <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(231,238,252,.75)" stroke-width="2"/>
-        <polygon points="${minx},${y} ${minx+10},${y-6} ${minx+10},${y+6}" fill="rgba(231,238,252,.75)"/>
-        <polygon points="${maxx},${y} ${maxx-10},${y-6} ${maxx-10},${y+6}" fill="rgba(231,238,252,.75)"/>
-        <rect x="${mid-70}" y="${y-28}" width="140" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
-        <text x="${mid}" y="${y-12}" font-size="13" text-anchor="middle" fill="rgba(231,238,252,.92)">${label}</text>
+        ${svgLine(60,y,920,y,color,2,dash)}
+        ${svgRect(60,y-18,w,22,10,"rgba(11,20,40,.68)","rgba(38,54,87,.85)")}
+        ${svgText(72,y-2,label,13,"rgba(231,238,252,.92)")}
       </g>
     `;
   }
 
-  function arrowV(x, y1, y2, label){
-    const mid = (y1+y2)/2;
-    const miny = Math.min(y1,y2), maxy = Math.max(y1,y2);
-    return `
-      <g class="svgtxt">
-        <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="rgba(231,238,252,.75)" stroke-width="2"/>
-        <polygon points="${x},${miny} ${x-6},${miny+10} ${x+6},${miny+10}" fill="rgba(231,238,252,.75)"/>
-        <polygon points="${x},${maxy} ${x-6},${maxy-10} ${x+6},${maxy-10}" fill="rgba(231,238,252,.75)"/>
-        <rect x="${x-58}" y="${mid-11}" width="116" height="22" rx="10" fill="rgba(11,20,40,.65)" stroke="rgba(38,54,87,.8)"/>
-        <text x="${x}" y="${mid+5}" font-size="13" text-anchor="middle" fill="rgba(231,238,252,.92)">${label}</text>
-      </g>
-    `;
+  // ---------- 3D Sketch Draw (Rect) ----------
+  function mapSpan(m){ // meters -> pixels (separate mapping for clarity)
+    const v = Math.max(0, Number(m));
+    return Math.max(60, Math.min(360, 90 + v*4.8));
   }
 
-  function drawSketchRect({egl, maxWL, il, bottom, fb, H, Z, Ltop, Wtop, Lb, Wb}){
+  function drawSketchRect3D(params){
     const g = $("gDraw");
+    const {
+      egl, maxWL, il, bottom, fb, H,
+      Ltop, Wtop, Lb, Wb, Z
+    } = params;
 
-    // Layout coordinates
-    const left = 170, right = 730;
-    const topY = 90, botY = 410;
-
-    // Map elevations to y (simple linear map)
+    // Vertical mapper (levels)
+    const yTop = 90, yBot = 540;
     const elevMax = egl;
     const elevMin = bottom;
-    const mapY = (e)=> {
-      if(elevMax === elevMin) return botY;
+    const mapY = (e)=>{
+      if(elevMax === elevMin) return yBot;
       const t = (elevMax - e) / (elevMax - elevMin);
-      return topY + t*(botY - topY);
+      return yTop + t*(yBot - yTop);
+    };
+    const yEGL = mapY(egl);
+    const yMax = mapY(maxWL);
+    const yIL  = mapY(il);
+    const yBtm = mapY(bottom);
+
+    // 3D box-frustum (isometric-ish)
+    const cx = 640, cy = 320;           // center of model
+    const lift = 120;                    // vertical lift for top face
+    const off = {x:90, y:-60};           // perspective offset for top face
+
+    const topLenPx = mapSpan(Ltop);
+    const topWidPx = mapSpan(Wtop);
+    const botLenPx = mapSpan(Lb);
+    const botWidPx = mapSpan(Wb);
+
+    // Bottom face (rectangle centered at cx,cy+110)
+    const bcy = cy + 130;
+    const bot = {
+      A:{x:cx - botLenPx/2, y:bcy - botWidPx/2},
+      B:{x:cx + botLenPx/2, y:bcy - botWidPx/2},
+      C:{x:cx + botLenPx/2, y:bcy + botWidPx/2},
+      D:{x:cx - botLenPx/2, y:bcy + botWidPx/2},
     };
 
-    const yEGL = mapY(egl);
-    const yMaxWL = mapY(maxWL);
-    const yIL = mapY(il);
-    const yBottom = mapY(bottom);
+    // Top face (offset + lifted)
+    const tcy = bcy - lift;
+    const top = {
+      A:{x:(cx - topLenPx/2) + off.x, y:(tcy - topWidPx/2) + off.y},
+      B:{x:(cx + topLenPx/2) + off.x, y:(tcy - topWidPx/2) + off.y},
+      C:{x:(cx + topLenPx/2) + off.x, y:(tcy + topWidPx/2) + off.y},
+      D:{x:(cx - topLenPx/2) + off.x, y:(tcy + topWidPx/2) + off.y},
+    };
 
-    // Build trapezoid section (not to scale in plan, but consistent)
-    const maxSpan = 520;
-    const topSpan = clampSpan(Ltop, maxSpan);
-    const botSpan = clampSpan(Lb, maxSpan);
+    // Water plane (at Max WL): show as translucent top face
+    // (since user inputs upper dims @ MaxWL, water aligns to top face)
+    const pondBody = `
+      <g>
+        <!-- sides -->
+        <polygon points="${top.A.x},${top.A.y} ${top.B.x},${top.B.y} ${bot.B.x},${bot.B.y} ${bot.A.x},${bot.A.y}"
+          fill="url(#soil)" stroke="rgba(231,238,252,.22)" stroke-width="2"/>
+        <polygon points="${top.B.x},${top.B.y} ${top.C.x},${top.C.y} ${bot.C.x},${bot.C.y} ${bot.B.x},${bot.B.y}"
+          fill="url(#soil)" stroke="rgba(231,238,252,.18)" stroke-width="2"/>
+        <polygon points="${top.C.x},${top.C.y} ${top.D.x},${top.D.y} ${bot.D.x},${bot.D.y} ${bot.C.x},${bot.C.y}"
+          fill="rgba(231,238,252,.06)" stroke="rgba(231,238,252,.16)" stroke-width="2"/>
+        <polygon points="${top.D.x},${top.D.y} ${top.A.x},${top.A.y} ${bot.A.x},${bot.A.y} ${bot.D.x},${bot.D.y}"
+          fill="rgba(231,238,252,.05)" stroke="rgba(231,238,252,.14)" stroke-width="2"/>
 
-    const cx = (left+right)/2;
-    const xTop1 = cx - topSpan/2;
-    const xTop2 = cx + topSpan/2;
-    const xBot1 = cx - botSpan/2;
-    const xBot2 = cx + botSpan/2;
+        <!-- bottom outline -->
+        <polygon points="${bot.A.x},${bot.A.y} ${bot.B.x},${bot.B.y} ${bot.C.x},${bot.C.y} ${bot.D.x},${bot.D.y}"
+          fill="rgba(0,0,0,0)" stroke="rgba(231,238,252,.18)" stroke-width="2"/>
 
-    const poly = `
-      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
-        fill="url(#soilGrad)" stroke="rgba(231,238,252,.22)" stroke-width="2" />
-    `;
-
-    // Water fill inside up to MaxWL
-    const water = `
-      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
-        fill="url(#waterGrad)" opacity="0.65" />
-    `;
-
-    // Level lines + annotations
-    const fbTxt = `Freeboard = ${fmt(fb,2)} m`;
-    const hTxt = `Depth H = ${fmt(H,2)} m`;
-    const zTxt = `Side slope Z:1 = ${fmt(Z,2)}:1`;
-
-    const lvlLines =
-      line(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
-      line(yMaxWL, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
-      line(yIL, `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
-      line(yBottom, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
-
-    const dims =
-      arrowH(yMaxWL - 32, xTop1, xTop2, `Upper L (shown) = ${fmt(Ltop,2)} m`) +
-      arrowH(yBottom + 34, xBot1, xBot2, `Lower L = ${fmt(Lb,2)} m`) +
-      arrowV(820, yMaxWL, yBottom, hTxt);
-
-    const notes = `
-      <g class="svgtxt">
-        <text x="70" y="60" font-size="15" fill="rgba(231,238,252,.92)">Rectangular Section (illustrative)</text>
-        <text x="70" y="78" font-size="13" fill="rgba(168,183,214,.92)">${fbTxt}  •  ${zTxt}</text>
-        <text x="70" y="96" font-size="13" fill="rgba(168,183,214,.92)">Upper Width input = ${fmt(Wtop,2)} m  →  Lower Width = ${fmt(Wb,2)} m</text>
+        <!-- water (top) -->
+        <polygon points="${top.A.x},${top.A.y} ${top.B.x},${top.B.y} ${top.C.x},${top.C.y} ${top.D.x},${top.D.y}"
+          fill="url(#water)" stroke="rgba(31,94,255,.55)" stroke-width="2" opacity="0.95"/>
       </g>
     `;
 
-    g.innerHTML = poly + water + lvlLines + dims + notes;
+    // Dimension arrows (Upper L, Upper W, Lower L, Lower W)
+    // Upper Length: top A->B
+    const dUpperL = dimArrow(top.A, top.B, `Upper Length = ${fmt(Ltop,2)} m`);
+    // Upper Width: top B->C (right edge)
+    const dUpperW = dimArrow(top.B, top.C, `Upper Width = ${fmt(Wtop,2)} m`);
+
+    // Lower Length: bot A->B
+    const dLowerL = dimArrow(bot.A, bot.B, `Lower Length = ${fmt(Lb,2)} m`, {color:"rgba(231,238,252,.70)"});
+    // Lower Width: bot B->C
+    const dLowerW = dimArrow(bot.B, bot.C, `Lower Width = ${fmt(Wb,2)} m`, {color:"rgba(231,238,252,.70)"});
+
+    // Level ruler lines
+    const lev =
+      levelLine(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
+      levelLine(yMax, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
+      levelLine(yIL,  `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
+      levelLine(yBtm, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
+
+    // Depth + Freeboard arrows on right side
+    const depthArrow = dimArrow({x:940,y:yMax},{x:940,y:yBtm}, `Depth H = ${fmt(H,2)} m`, {color:"rgba(231,238,252,.78)"});
+    const fbArrow = dimArrow({x:900,y:yEGL},{x:900,y:yMax}, `Freeboard = ${fmt(fb,2)} m`, {color:"rgba(231,238,252,.60)"});
+
+    const title = `
+      <g class="svgtxt">
+        ${svgText(60,58,`Rectangular Pond (3D)  •  Side slope Z:1 = ${fmt(Z,2)}:1`,15,"rgba(231,238,252,.92)")}
+      </g>
+    `;
+
+    g.innerHTML = title + lev + pondBody + dUpperL + dUpperW + dLowerL + dLowerW + depthArrow + fbArrow;
   }
 
-  function drawSketchCirc({egl, maxWL, il, bottom, fb, H, Z, Dtop, Dbottom}){
+  // ---------- 3D Sketch Draw (Circular / Conical) ----------
+  function drawSketchCirc3D(params){
     const g = $("gDraw");
+    const {
+      egl, maxWL, il, bottom, fb, H,
+      Dtop, Dbottom, Z
+    } = params;
 
-    const left = 170, right = 730;
-    const topY = 90, botY = 410;
-
+    const yTop = 90, yBot = 540;
     const elevMax = egl;
     const elevMin = bottom;
-    const mapY = (e)=> {
-      if(elevMax === elevMin) return botY;
+    const mapY = (e)=>{
+      if(elevMax === elevMin) return yBot;
       const t = (elevMax - e) / (elevMax - elevMin);
-      return topY + t*(botY - topY);
+      return yTop + t*(yBot - yTop);
     };
-
     const yEGL = mapY(egl);
-    const yMaxWL = mapY(maxWL);
-    const yIL = mapY(il);
-    const yBottom = mapY(bottom);
+    const yMax = mapY(maxWL);
+    const yIL  = mapY(il);
+    const yBtm = mapY(bottom);
 
-    const maxSpan = 520;
-    const topSpan = clampSpan(Dtop, maxSpan);
-    const botSpan = clampSpan(Dbottom, maxSpan);
+    const cx = 660, cy = 330;
+    const lift = 130;
+    const off = {x:95, y:-65};
 
-    const cx = (left+right)/2;
-    const xTop1 = cx - topSpan/2;
-    const xTop2 = cx + topSpan/2;
-    const xBot1 = cx - botSpan/2;
-    const xBot2 = cx + botSpan/2;
+    const topDiaPx = mapSpan(Dtop);
+    const botDiaPx = mapSpan(Dbottom);
 
-    const poly = `
-      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
-        fill="url(#soilGrad)" stroke="rgba(231,238,252,.22)" stroke-width="2" />
-    `;
-    const water = `
-      <polygon points="${xTop1},${yMaxWL} ${xTop2},${yMaxWL} ${xBot2},${yBottom} ${xBot1},${yBottom}"
-        fill="url(#waterGrad)" opacity="0.65" />
-    `;
+    const bcy = cy + 130;
+    const tcy = bcy - lift;
 
-    const fbTxt = `Freeboard = ${fmt(fb,2)} m`;
-    const zTxt = `Side slope Z:1 = ${fmt(Z,2)}:1`;
+    // Draw as frustum using ellipses + side quads
+    const bot = {x:cx, y:bcy, rx:botDiaPx/2, ry:(botDiaPx/2)*0.28};
+    const top = {x:cx+off.x, y:tcy+off.y, rx:topDiaPx/2, ry:(topDiaPx/2)*0.28};
 
-    const lvlLines =
-      line(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
-      line(yMaxWL, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
-      line(yIL, `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
-      line(yBottom, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
+    const body = `
+      <g>
+        <!-- side shape (approx) -->
+        <path d="
+          M ${top.x-top.rx} ${top.y}
+          C ${top.x-top.rx} ${top.y+top.ry} ${top.x+top.rx} ${top.y+top.ry} ${top.x+top.rx} ${top.y}
+          L ${bot.x+bot.rx} ${bot.y}
+          C ${bot.x+bot.rx} ${bot.y+bot.ry} ${bot.x-bot.rx} ${bot.y+bot.ry} ${bot.x-bot.rx} ${bot.y}
+          Z"
+          fill="url(#soil)" stroke="rgba(231,238,252,.22)" stroke-width="2"/>
 
-    const dims =
-      arrowH(yMaxWL - 32, xTop1, xTop2, `Upper D (shown) = ${fmt(Dtop,2)} m`) +
-      arrowH(yBottom + 34, xBot1, xBot2, `Lower D = ${fmt(Dbottom,2)} m`) +
-      arrowV(820, yMaxWL, yBottom, `Depth H = ${fmt(H,2)} m`);
+        <!-- bottom ellipse outline -->
+        <ellipse cx="${bot.x}" cy="${bot.y}" rx="${bot.rx}" ry="${bot.ry}"
+          fill="rgba(0,0,0,0)" stroke="rgba(231,238,252,.18)" stroke-width="2"/>
 
-    const notes = `
-      <g class="svgtxt">
-        <text x="70" y="60" font-size="15" fill="rgba(231,238,252,.92)">Circular (Conical) Section (illustrative)</text>
-        <text x="70" y="78" font-size="13" fill="rgba(168,183,214,.92)">${fbTxt}  •  ${zTxt}</text>
+        <!-- water (top ellipse) -->
+        <ellipse cx="${top.x}" cy="${top.y}" rx="${top.rx}" ry="${top.ry}"
+          fill="url(#water)" stroke="rgba(31,94,255,.55)" stroke-width="2" opacity="0.95"/>
+
+        <!-- top ellipse rim -->
+        <ellipse cx="${top.x}" cy="${top.y}" rx="${top.rx}" ry="${top.ry}"
+          fill="rgba(0,0,0,0)" stroke="rgba(231,238,252,.22)" stroke-width="2"/>
       </g>
     `;
 
-    g.innerHTML = poly + water + lvlLines + dims + notes;
+    // Diameter dimension arrows
+    const topLeft = {x:top.x-top.rx, y:top.y};
+    const topRight= {x:top.x+top.rx, y:top.y};
+    const botLeft = {x:bot.x-bot.rx, y:bot.y};
+    const botRight= {x:bot.x+bot.rx, y:bot.y};
+
+    const dTop = dimArrow(topLeft, topRight, `Upper Diameter = ${fmt(Dtop,2)} m`);
+    const dBot = dimArrow(botLeft, botRight, `Lower Diameter = ${fmt(Dbottom,2)} m`, {color:"rgba(231,238,252,.70)"});
+
+    const lev =
+      levelLine(yEGL, `EGL = ${fmt(egl,2)} m`, "rgba(255,255,255,.55)", true) +
+      levelLine(yMax, `Max WL = ${fmt(maxWL,2)} m`, "rgba(31,94,255,.95)", false) +
+      levelLine(yIL,  `IL = ${fmt(il,2)} m`, "rgba(0,230,118,.85)", true) +
+      levelLine(yBtm, `Bottom = ${fmt(bottom,2)} m`, "rgba(231,238,252,.55)", true);
+
+    const depthArrow = dimArrow({x:940,y:yMax},{x:940,y:yBtm}, `Depth H = ${fmt(H,2)} m`, {color:"rgba(231,238,252,.78)"});
+    const fbArrow = dimArrow({x:900,y:yEGL},{x:900,y:yMax}, `Freeboard = ${fmt(fb,2)} m`, {color:"rgba(231,238,252,.60)"});
+
+    const title = `
+      <g class="svgtxt">
+        ${svgText(60,58,`Circular Pond (3D)  •  Side slope Z:1 = ${fmt(Z,2)}:1`,15,"rgba(231,238,252,.92)")}
+      </g>
+    `;
+
+    g.innerHTML = title + lev + body + dTop + dBot + depthArrow + fbArrow;
   }
 
-  function clampSpan(realMeters, maxSpanPx){
-    // Convert "meters" to a sketch span. Keep readable for very big/small values.
-    // Using a soft mapping: spanPx = base + k * meters, then clamp.
-    const m = Math.max(0, Number(realMeters));
-    const span = 120 + 6.2 * m;
-    return Math.max(90, Math.min(maxSpanPx, span));
-  }
-
+  // ---------- Live Sketch (best effort) ----------
   function safeSketchFromInputs(){
-    // Try to draw something even before calc.
     const egl = Number($("egl").value);
     const il  = Number($("il").value);
     const below = Math.max(Number($("belowIL").value), 0.30);
@@ -647,12 +748,12 @@
       const Lb = Ltop - 2*Z*H;
       const Wb = Wtop - 2*Z*H;
 
-      drawSketchRect({
-        egl, maxWL, il, bottom, fb, H, Z,
-        Ltop: isFinite(Ltop)?Ltop:0,
-        Wtop: isFinite(Wtop)?Wtop:0,
+      drawSketchRect3D({
+        egl, maxWL, il, bottom, fb, H,
+        Ltop, Wtop,
         Lb: isFinite(Lb)?Math.max(Lb,0):0,
-        Wb: isFinite(Wb)?Math.max(Wb,0):0
+        Wb: isFinite(Wb)?Math.max(Wb,0):0,
+        Z
       });
     } else {
       const Dtop = Number($("dtop").value);
@@ -661,17 +762,18 @@
 
       const Dbottom = Dtop - 2*Z*H;
 
-      drawSketchCirc({
-        egl, maxWL, il, bottom, fb, H, Z,
-        Dtop: isFinite(Dtop)?Dtop:0,
-        Dbottom: isFinite(Dbottom)?Math.max(Dbottom,0):0
+      drawSketchCirc3D({
+        egl, maxWL, il, bottom, fb, H,
+        Dtop,
+        Dbottom: isFinite(Dbottom)?Math.max(Dbottom,0):0,
+        Z
       });
     }
   }
 
+  // ---------- CALC ----------
   function calc(){
     try{
-      // Levels
       const egl = Number($("egl").value);
       const il  = Number($("il").value);
       let below = Number($("belowIL").value);
@@ -686,19 +788,17 @@
       const H = maxWL - bottom;
       if(!(H>0)) throw new Error("Invalid levels: (EGL - Freeboard) must be above (IL - Depth below IL).");
 
-      // Geometry (user inputs UPPER dims, compute LOWER dims)
       const shape = $("shape").value;
 
-      let Vtot = 0;
-      let Vbelow = 0;
-
+      let Vtot = 0, Vbelow = 0;
       let topL = NaN, topW = NaN, topD = NaN;
       let lowL = NaN, lowW = NaN, lowD = NaN;
+      let Z = NaN;
 
       if(shape === "rect"){
         topL = Number($("ltop").value);
         topW = Number($("wtop").value);
-        const Z  = Number($("z").value);
+        Z  = Number($("z").value);
 
         if(!(topL>0 && topW>0 && Z>=0)) throw new Error("Check rectangular upper dimensions and side slope.");
 
@@ -717,20 +817,19 @@
           Vbelow = pondVolumeRect(lowL, lowW, Z, hUse);
         }
 
-        drawSketchRect({egl, maxWL, il, bottom, fb, H, Z, Ltop:topL, Wtop:topW, Lb:lowL, Wb:lowW});
+        drawSketchRect3D({egl, maxWL, il, bottom, fb, H, Ltop:topL, Wtop:topW, Lb:lowL, Wb:lowW, Z});
       } else {
         topD = Number($("dtop").value);
-        const Z  = Number($("zc").value);
+        Z  = Number($("zc").value);
 
         if(!(topD>0 && Z>=0)) throw new Error("Check circular upper diameter and side slope.");
 
-        const rTop = topD/2;
-        const r0 = rTop - Z*H;
-        if(!(r0 > 0)){
+        lowD = topD - 2*Z*H;
+        if(!(lowD > 0)){
           throw new Error("Increase the pond dimension (upper diameter too small for this depth and side slope).");
         }
 
-        lowD = 2*r0;
+        const r0 = lowD/2;
         Vtot = pondVolumeCirc(r0, Z, H);
 
         const Hbelow = Math.max(0, il - bottom);
@@ -739,7 +838,7 @@
           Vbelow = pondVolumeCirc(r0, Z, hUse);
         }
 
-        drawSketchCirc({egl, maxWL, il, bottom, fb, H, Z, Dtop:topD, Dbottom:lowD});
+        drawSketchCirc3D({egl, maxWL, il, bottom, fb, H, Dtop:topD, Dbottom:lowD, Z});
       }
 
       const Vactive = Math.max(0, Vtot - Vbelow);
@@ -790,6 +889,7 @@
       $("kBottom").textContent = fmt(bottom,2);
       $("kMaxWL").textContent = fmt(maxWL,2);
       $("kDepth").textContent  = fmt(H,2);
+      $("kFB").textContent = fmt(fb,2);
 
       $("kTopL").textContent = isFinite(topL) ? fmt(topL,2) : "–";
       $("kTopW").textContent = isFinite(topW) ? fmt(topW,2) : "–";
@@ -822,7 +922,7 @@
       $("kPass").textContent = "–";
       $("kPass").classList.remove("pass","fail");
       setStatus(null, "—");
-      safeSketchFromInputs(); // still draw what we can
+      safeSketchFromInputs();
     }
   }
 
