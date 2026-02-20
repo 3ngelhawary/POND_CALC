@@ -20,33 +20,27 @@
       --shadow:0 12px 35px rgba(0,0,0,.28);
       --radius:16px;
 
-      --upper:#59a6ff;  /* upper dims color */
-      --lower:#20d486;  /* lower dims color */
+      --upper:#2f7dff;  /* upper dims */
+      --lower:#16c784;  /* lower dims */
+      --depth:#ff9f1a;  /* depth */
     }
 
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:system-ui,Segoe UI,Roboto,Arial;
-      background:linear-gradient(160deg,#070c16,#0b1220 45%,#070c16);
+      background:radial-gradient(1100px 520px at 15% 0%, rgba(47,125,255,.18), transparent 60%),
+                 radial-gradient(900px 500px at 90% 12%, rgba(22,199,132,.10), transparent 55%),
+                 linear-gradient(160deg,#070c16,#0b1220 45%,#070c16);
       color:var(--txt);
     }
     .wrap{max-width:1450px;margin:0 auto;padding:18px}
 
-    .topbar{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      margin-bottom:14px;
-    }
+    .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
     h1{margin:0;font-size:26px;letter-spacing:.2px}
     .subtitle{margin:6px 0 0;color:var(--muted);max-width:980px;line-height:1.35}
 
-    /* 3 columns */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:16px;
-      align-items:start;
-    }
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
     @media(max-width:1200px){ .grid{grid-template-columns:1fr 1fr} }
     @media(max-width:820px){ .grid{grid-template-columns:1fr} }
 
@@ -60,7 +54,6 @@
     }
     .card h2{margin:0 0 10px;font-size:15px;letter-spacing:.2px}
     .muted{color:var(--muted)}
-    .small{font-size:12px}
     .hr{height:1px;background:var(--line);margin:14px 0;opacity:.75}
 
     label{display:block;font-size:12px;color:var(--muted);margin:6px 0}
@@ -103,9 +96,7 @@
       line-height:1.35;
     }
 
-    .splitHead{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-    }
+    .splitHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .tag{
       font-size:12px;
       padding:6px 10px;
@@ -115,23 +106,12 @@
       background:rgba(11,20,40,.35);
     }
 
-    /* KPIs */
-    .kpis{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-      margin-top:12px
-    }
+    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
     @media(max-width:1200px){ .kpis{grid-template-columns:repeat(3,1fr)} }
     @media(max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} }
     @media(max-width:520px){ .kpis{grid-template-columns:1fr} }
 
-    .kpi{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px 12px;
-      background:rgba(11,20,40,.35);
-    }
+    .kpi{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:rgba(11,20,40,.35)}
     .kpi .t{font-size:11px;color:var(--muted)}
     .kpi .v{font-size:16px;font-weight:900;margin-top:6px}
 
@@ -145,8 +125,8 @@
     .sketchWrap{
       border:1px solid var(--line);
       border-radius:14px;
-      background:#ffffff;  /* like reference */
-      padding:12px;
+      background:#ffffff;
+      padding:10px;
       overflow:hidden;
     }
     svg{width:100%;height:auto;display:block}
@@ -159,12 +139,12 @@
     <div class="topbar">
       <div>
         <h1>Pond Volume Calculator</h1>
-        <div class="subtitle">Enter <b>Upper (Top) dimensions at Max WL</b>. The calculator derives <b>Lower (Bottom) dimensions</b> using depth and side slope.</div>
+        <div class="subtitle">Upper dimensions are entered at Max WL. Lower (bottom) dimensions are calculated automatically.</div>
       </div>
     </div>
 
     <div class="grid">
-      <!-- 1) INPUTS -->
+      <!-- INPUTS -->
       <div class="card">
         <div class="splitHead">
           <h2>Inputs</h2>
@@ -312,7 +292,7 @@
         <div id="msg" class="msg">Ready.</div>
       </div>
 
-      <!-- 2) RESULTS -->
+      <!-- RESULTS -->
       <div class="card">
         <div class="splitHead">
           <h2>Results</h2>
@@ -344,38 +324,47 @@
         </div>
       </div>
 
-      <!-- 3) SKETCH -->
+      <!-- SKETCH -->
       <div class="card">
         <div class="splitHead">
           <h2>Sketch</h2>
-          <span class="tag">Upper & Lower</span>
+          <span class="tag">3D + Clear Labels</span>
         </div>
 
         <div class="sketchWrap">
           <svg viewBox="0 0 1100 930" role="img" aria-label="Pond sketch">
             <defs>
-              <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#111"></path>
+              <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.25"/>
+              </filter>
+
+              <marker id="arrU" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f7dff"></path>
+              </marker>
+              <marker id="arrL" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#16c784"></path>
+              </marker>
+              <marker id="arrD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff9f1a"></path>
               </marker>
 
               <linearGradient id="gSoil" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#a8c96f"/>
-                <stop offset="1" stop-color="#7d9450"/>
+                <stop offset="0" stop-color="#b9d67b"/>
+                <stop offset="1" stop-color="#7f9851"/>
               </linearGradient>
               <linearGradient id="gWall" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#f2f6fb"/>
-                <stop offset="1" stop-color="#d6e0ec"/>
+                <stop offset="0" stop-color="#f5f8fe"/>
+                <stop offset="1" stop-color="#d2dbe7"/>
+              </linearGradient>
+              <linearGradient id="gWall2" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#eaf0f8"/>
+                <stop offset="1" stop-color="#c4cfde"/>
               </linearGradient>
               <linearGradient id="gWater" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#7fd3ff"/>
+                <stop offset="0" stop-color="#98dcff"/>
                 <stop offset="1" stop-color="#2ea7e0"/>
               </linearGradient>
             </defs>
-
-            <!-- clean title -->
-            <text x="550" y="80" text-anchor="middle" class="svgtxt" font-size="56" font-weight="900" fill="#111">
-              Pond Sketch
-            </text>
 
             <g id="gDraw"></g>
           </svg>
@@ -432,188 +421,201 @@
   }
   function setMsg(txt){ $("msg").textContent = txt; }
 
-  // ---------- SVG drawing (NEW: clearer sketch) ----------
+  // ---------- CATCHY SVG (new) ----------
   function esc(s){
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
-  function t(x,y,s,fs=30,fw=800,fill="#111",anchor="start"){
-    return `<text x="${x}" y="${y}" text-anchor="${anchor}" class="svgtxt" font-size="${fs}" font-weight="${fw}" fill="${fill}">${esc(s)}</text>`;
+  function tx(x,y,s,fs=30,fw=900,fill="#111",anchor="start"){
+    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="system-ui,Segoe UI,Roboto,Arial" font-size="${fs}" font-weight="${fw}" fill="${fill}">${esc(s)}</text>`;
   }
-  function r(x,y,w,h,rx=18,fill="#fff",stroke="#111",sw=4){
+  function rr(x,y,w,h,rx=18,fill="#fff",stroke="#111",sw=4){
     return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
   }
-  function ln(x1,y1,x2,y2,stroke="#111",sw=5,dash=false){
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${sw}" ${dash?'stroke-dasharray="14 12"':''}/>`;
+  function dimLine(x1,y1,x2,y2,color,markerId,sw=7){
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${sw}" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>`;
   }
-  function arr(x1,y1,x2,y2,stroke="#111",sw=5){
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${sw}" marker-start="url(#arr)" marker-end="url(#arr)"/>`;
+  function tagBox(x,y,text,bg,fg){
+    const w = Math.max(220, text.length*15);
+    return `
+      <g filter="url(#ds)">
+        ${rr(x,y,w,56,18,bg,"#111",4)}
+        ${tx(x+w/2,y+40,text,28,900,fg,"middle")}
+      </g>`;
   }
-  function pill(x,y,w,h,text,fill,stroke="#111",textFill="#111"){
-    return `${r(x,y,w,h,18,fill,stroke,4)}${t(x+w/2,y+h-12,text,28,900,textFill,"middle")}`;
-  }
-
   function mapSpanMetersToPx(m){
-    // Keep consistent look regardless of input:
     const v = Math.max(0, Number(m));
-    return Math.max(220, Math.min(620, 320 + v*7.5));
+    return Math.max(260, Math.min(660, 360 + v*7.8));
   }
 
-  function drawRectSketchClear({egl,maxWL,il,bottom,fb,H,Ltop,Wtop,Lb,Wb}){
+  function drawRectCatchy({egl,maxWL,il,bottom,fb,H,Ltop,Wtop,Lb,Wb}){
     const g = document.getElementById("gDraw");
 
-    // Left info box (like reference)
-    const box = `
-      ${r(60,135,420,250,22,"#ffffff","#111",4)}
-      ${t(90,185,"EGL",30,900,"#111")} ${t(250,185,`= ${fmt(egl,2)} m`,30,900,"#111")}
-      ${t(90,230,"Max WL",30,900,"#111")} ${t(250,230,`= ${fmt(maxWL,2)} m`,30,900,"#111")}
-      ${t(90,275,"IL",30,900,"#111")} ${t(250,275,`= ${fmt(il,2)} m`,30,900,"#111")}
-      ${t(90,320,"Bottom",30,900,"#111")} ${t(250,320,`= ${fmt(bottom,2)} m`,30,900,"#111")}
-      ${t(90,365,"Freeboard",30,900,"#111")} ${t(250,365,`= ${fmt(fb,2)} m`,30,900,"#111")}
+    // Title (clean)
+    const title = `
+      ${tx(550,80,"Pond Sketch",60,1000,"#111","middle")}
     `;
 
-    // 3D frustum centered
-    const cx = 770, cy = 530;
-    const ox = 140, oy = -110;
-    const lift = 260;
+    // Level box (left)
+    const info = `
+      <g filter="url(#ds)">
+        ${rr(60,140,430,280,26,"#ffffff","#111",4)}
+        ${tx(95,195,"EGL",30,900)} ${tx(250,195,`= ${fmt(egl,2)} m`,30,900)}
+        ${tx(95,245,"Max WL",30,900)} ${tx(250,245,`= ${fmt(maxWL,2)} m`,30,900)}
+        ${tx(95,295,"IL",30,900)} ${tx(250,295,`= ${fmt(il,2)} m`,30,900)}
+        ${tx(95,345,"Bottom",30,900)} ${tx(250,345,`= ${fmt(bottom,2)} m`,30,900)}
+        ${tx(95,395,"Freeboard",30,900)} ${tx(250,395,`= ${fmt(fb,2)} m`,30,900)}
+      </g>
+    `;
+
+    const legend = `
+      ${tagBox(60,445,"UPPER DIMENSIONS","#e8f1ff","#2f7dff")}
+      ${tagBox(60,515,"LOWER DIMENSIONS","#e9fff6","#16c784")}
+      ${tagBox(60,585,"DEPTH (H)","#fff3df","#ff9f1a")}
+    `;
+
+    // 3D frustum
+    const cx = 790, cy = 535;
+    const ox = 150, oy = -125;
+    const lift = 285;
 
     const topLpx = mapSpanMetersToPx(Ltop);
     const topWpx = mapSpanMetersToPx(Wtop);
     const botLpx = mapSpanMetersToPx(Math.max(Lb,0));
     const botWpx = mapSpanMetersToPx(Math.max(Wb,0));
 
-    // top plane points
     const tA = {x:cx - topLpx/2 + ox, y:cy - topWpx/2 + oy};
     const tB = {x:cx + topLpx/2 + ox, y:cy - topWpx/2 + oy};
     const tC = {x:cx + topLpx/2 + ox, y:cy + topWpx/2 + oy};
     const tD = {x:cx - topLpx/2 + ox, y:cy + topWpx/2 + oy};
 
-    // bottom plane points
     const bA = {x:cx - botLpx/2, y:cy - botWpx/2 + lift};
     const bB = {x:cx + botLpx/2, y:cy - botWpx/2 + lift};
     const bC = {x:cx + botLpx/2, y:cy + botWpx/2 + lift};
     const bD = {x:cx - botLpx/2, y:cy + botWpx/2 + lift};
 
-    // body + rim + water (cleaner, less clutter)
     const model = `
-      <!-- sides -->
-      <polygon points="${tA.x},${tA.y} ${tB.x},${tB.y} ${bB.x},${bB.y} ${bA.x},${bA.y}" fill="url(#gWall)" stroke="#111" stroke-width="3"/>
-      <polygon points="${tB.x},${tB.y} ${tC.x},${tC.y} ${bC.x},${bC.y} ${bB.x},${bB.y}" fill="url(#gWall)" stroke="#111" stroke-width="3"/>
-      <polygon points="${tC.x},${tC.y} ${tD.x},${tD.y} ${bD.x},${bD.y} ${bC.x},${bC.y}" fill="#dbe5f0" stroke="#111" stroke-width="3"/>
-      <polygon points="${tD.x},${tD.y} ${tA.x},${tA.y} ${bA.x},${bA.y} ${bD.x},${bD.y}" fill="#d6e0ec" stroke="#111" stroke-width="3"/>
+      <g filter="url(#ds)">
+        <!-- sides -->
+        <polygon points="${tA.x},${tA.y} ${tB.x},${tB.y} ${bB.x},${bB.y} ${bA.x},${bA.y}" fill="url(#gWall)" stroke="#111" stroke-width="3"/>
+        <polygon points="${tB.x},${tB.y} ${tC.x},${tC.y} ${bC.x},${bC.y} ${bB.x},${bB.y}" fill="url(#gWall2)" stroke="#111" stroke-width="3"/>
+        <polygon points="${tC.x},${tC.y} ${tD.x},${tD.y} ${bD.x},${bD.y} ${bC.x},${bC.y}" fill="#dbe6f2" stroke="#111" stroke-width="3"/>
+        <polygon points="${tD.x},${tD.y} ${tA.x},${tA.y} ${bA.x},${bA.y} ${bD.x},${bD.y}" fill="#d2dbe7" stroke="#111" stroke-width="3"/>
 
-      <!-- top green surface -->
-      <polygon points="${tA.x},${tA.y} ${tB.x},${tB.y} ${tC.x},${tC.y} ${tD.x},${tD.y}" fill="url(#gSoil)" stroke="#111" stroke-width="3"/>
+        <!-- top ground -->
+        <polygon points="${tA.x},${tA.y} ${tB.x},${tB.y} ${tC.x},${tC.y} ${tD.x},${tD.y}" fill="url(#gSoil)" stroke="#111" stroke-width="3"/>
 
-      <!-- inner rim -->
-      <polygon points="${tA.x+22},${tA.y+22} ${tB.x-22},${tB.y+22} ${tC.x-22},${tC.y-22} ${tD.x+22},${tD.y-22}"
-        fill="#ffffff" stroke="#111" stroke-width="3"/>
+        <!-- inner rim -->
+        <polygon points="${tA.x+28},${tA.y+26} ${tB.x-28},${tB.y+26} ${tC.x-28},${tC.y-26} ${tD.x+28},${tD.y-26}"
+          fill="#ffffff" stroke="#111" stroke-width="3"/>
 
-      <!-- water -->
-      <polygon points="${tA.x+50},${tA.y+45} ${tB.x-50},${tB.y+45} ${tC.x-50},${tC.y-45} ${tD.x+50},${tD.y-45}"
-        fill="url(#gWater)" stroke="#111" stroke-width="2" opacity="0.95"/>
+        <!-- water -->
+        <polygon points="${tA.x+62},${tA.y+52} ${tB.x-62},${tB.y+52} ${tC.x-62},${tC.y-52} ${tD.x+62},${tD.y-52}"
+          fill="url(#gWater)" stroke="#111" stroke-width="2" opacity="0.97"/>
+      </g>
     `;
 
-    // dimension arrows (very clear)
+    // Dimension lines (colored + bold)
     const dims = `
-      <!-- Upper Length -->
-      ${arr(tA.x, tA.y-80, tB.x, tB.y-80, "#111", 6)}
-      ${t((tA.x+tB.x)/2, tA.y-105, "Upper Length", 34, 900, "#111", "middle")}
-      ${t((tA.x+tB.x)/2, tA.y-65, `${fmt(Ltop,2)} m`, 30, 900, "#1f5eff", "middle")}
+      <!-- UPPER LENGTH -->
+      ${dimLine(tA.x, tA.y-88, tB.x, tB.y-88, "#2f7dff","arrU",8)}
+      ${tx((tA.x+tB.x)/2, tA.y-115, "Upper Length", 36, 1000, "#111", "middle")}
+      ${tx((tA.x+tB.x)/2, tA.y-74, `${fmt(Ltop,2)} m`, 34, 1000, "#2f7dff", "middle")}
 
-      <!-- Upper Width -->
-      ${arr(tC.x+90, tB.y, tC.x+90, tC.y, "#111", 6)}
-      <g transform="translate(${tC.x+132},${(tB.y+tC.y)/2}) rotate(90)">
-        ${t(0,-10,"Upper Width",34,900,"#111","middle")}
-        ${t(0,28,`${fmt(Wtop,2)} m`,30,900,"#1f5eff","middle")}
+      <!-- UPPER WIDTH -->
+      ${dimLine(tC.x+105, tB.y, tC.x+105, tC.y, "#2f7dff","arrU",8)}
+      <g transform="translate(${tC.x+152},${(tB.y+tC.y)/2}) rotate(90)">
+        ${tx(0,-10,"Upper Width",36,1000,"#111","middle")}
+        ${tx(0,32,`${fmt(Wtop,2)} m`,34,1000,"#2f7dff","middle")}
       </g>
 
-      <!-- Lower Length -->
-      ${arr(bA.x, bA.y+105, bB.x, bB.y+105, "#111", 6)}
-      ${t((bA.x+bB.x)/2, bA.y+78, "Lower Length", 32, 900, "#111", "middle")}
-      ${t((bA.x+bB.x)/2, bA.y+123, `${fmt(Lb,2)} m`, 28, 900, "#00b86b", "middle")}
+      <!-- LOWER LENGTH -->
+      ${dimLine(bA.x, bA.y+120, bB.x, bB.y+120, "#16c784","arrL",8)}
+      ${tx((bA.x+bB.x)/2, bA.y+92, "Lower Length", 34, 1000, "#111", "middle")}
+      ${tx((bA.x+bB.x)/2, bA.y+136, `${fmt(Lb,2)} m`, 32, 1000, "#16c784", "middle")}
 
-      <!-- Lower Width -->
-      ${arr(bC.x+90, bB.y, bC.x+90, bC.y, "#111", 6)}
-      <g transform="translate(${bC.x+132},${(bB.y+bC.y)/2}) rotate(90)">
-        ${t(0,-10,"Lower Width",32,900,"#111","middle")}
-        ${t(0,28,`${fmt(Wb,2)} m`,28,900,"#00b86b","middle")}
+      <!-- LOWER WIDTH -->
+      ${dimLine(bC.x+105, bB.y, bC.x+105, bC.x?bC.y:bB.y, "#16c784","arrL",8)}
+      ${dimLine(bC.x+105, bB.y, bC.x+105, bC.y, "#16c784","arrL",8)}
+      <g transform="translate(${bC.x+152},${(bB.y+bC.y)/2}) rotate(90)">
+        ${tx(0,-10,"Lower Width",34,1000,"#111","middle")}
+        ${tx(0,30,`${fmt(Wb,2)} m`,32,1000,"#16c784","middle")}
       </g>
 
-      <!-- Depth H -->
-      ${arr(tA.x-160, tA.y+45, tA.x-160, bA.y-10, "#111", 6)}
-      ${t(tA.x-160, (tA.y+45+bA.y-10)/2 - 10, "Depth (H)", 34, 900, "#111", "middle")}
-      ${t(tA.x-160, (tA.y+45+bA.y-10)/2 + 34, `${fmt(H,2)} m`, 30, 900, "#111", "middle")}
+      <!-- DEPTH -->
+      ${dimLine(tA.x-175, tA.y+55, tA.x-175, bA.y-10, "#ff9f1a","arrD",8)}
+      ${tx(tA.x-175, (tA.y+55+bA.y-10)/2 - 10, "Depth (H)", 36, 1000, "#111", "middle")}
+      ${tx(tA.x-175, (tA.y+55+bA.y-10)/2 + 34, `${fmt(H,2)} m`, 34, 1000, "#ff9f1a", "middle")}
     `;
 
-    // colored legend (upper/lower)
-    const legend = `
-      ${pill(60,420,420,70,"UPPER DIMENSIONS", "#e9f3ff","#111","#1f5eff")}
-      ${pill(60,505,420,70,"LOWER DIMENSIONS", "#eafff6","#111","#00b86b")}
-    `;
-
-    g.innerHTML = box + legend + model + dims;
+    g.innerHTML = title + info + legend + model + dims;
   }
 
-  function drawCircSketchClear({egl,maxWL,il,bottom,fb,H,Dtop,Dbottom}){
+  function drawCircCatchy({egl,maxWL,il,bottom,fb,H,Dtop,Dbottom}){
     const g = document.getElementById("gDraw");
 
-    const box = `
-      ${r(60,135,420,250,22,"#ffffff","#111",4)}
-      ${t(90,185,"EGL",30,900,"#111")} ${t(250,185,`= ${fmt(egl,2)} m`,30,900,"#111")}
-      ${t(90,230,"Max WL",30,900,"#111")} ${t(250,230,`= ${fmt(maxWL,2)} m`,30,900,"#111")}
-      ${t(90,275,"IL",30,900,"#111")} ${t(250,275,`= ${fmt(il,2)} m`,30,900,"#111")}
-      ${t(90,320,"Bottom",30,900,"#111")} ${t(250,320,`= ${fmt(bottom,2)} m`,30,900,"#111")}
-      ${t(90,365,"Freeboard",30,900,"#111")} ${t(250,365,`= ${fmt(fb,2)} m`,30,900,"#111")}
+    const title = `${tx(550,80,"Pond Sketch",60,1000,"#111","middle")}`;
+
+    const info = `
+      <g filter="url(#ds)">
+        ${rr(60,140,430,280,26,"#ffffff","#111",4)}
+        ${tx(95,195,"EGL",30,900)} ${tx(250,195,`= ${fmt(egl,2)} m`,30,900)}
+        ${tx(95,245,"Max WL",30,900)} ${tx(250,245,`= ${fmt(maxWL,2)} m`,30,900)}
+        ${tx(95,295,"IL",30,900)} ${tx(250,295,`= ${fmt(il,2)} m`,30,900)}
+        ${tx(95,345,"Bottom",30,900)} ${tx(250,345,`= ${fmt(bottom,2)} m`,30,900)}
+        ${tx(95,395,"Freeboard",30,900)} ${tx(250,395,`= ${fmt(fb,2)} m`,30,900)}
+      </g>
     `;
 
-    const cx = 800, cy = 520;
-    const ox = 140, oy = -110;
-    const lift = 260;
+    const legend = `
+      ${tagBox(60,445,"UPPER DIMENSIONS","#e8f1ff","#2f7dff")}
+      ${tagBox(60,515,"LOWER DIMENSIONS","#e9fff6","#16c784")}
+      ${tagBox(60,585,"DEPTH (H)","#fff3df","#ff9f1a")}
+    `;
+
+    const cx = 820, cy = 530;
+    const ox = 150, oy = -125;
+    const lift = 285;
 
     const topDpx = mapSpanMetersToPx(Dtop);
     const botDpx = mapSpanMetersToPx(Math.max(Dbottom,0));
 
-    const tC = {x:cx+ox, y:cy+oy};
-    const bC = {x:cx, y:cy+lift};
+    const tc = {x:cx+ox, y:cy+oy};
+    const bc = {x:cx, y:cy+lift};
 
     const topRx = topDpx/2, topRy = topDpx*0.18;
     const botRx = botDpx/2, botRy = botDpx*0.18;
 
     const model = `
-      <path d="
-        M ${tC.x-topRx} ${tC.y}
-        C ${tC.x-topRx} ${tC.y+topRy} ${tC.x+topRx} ${tC.y+topRy} ${tC.x+topRx} ${tC.y}
-        L ${bC.x+botRx} ${bC.y}
-        C ${bC.x+botRx} ${bC.y+botRy} ${bC.x-botRx} ${bC.y+botRy} ${bC.x-botRx} ${bC.y}
-        Z"
-        fill="url(#gWall)" stroke="#111" stroke-width="3"/>
-
-      <ellipse cx="${tC.x}" cy="${tC.y}" rx="${topRx}" ry="${topRy}" fill="url(#gSoil)" stroke="#111" stroke-width="3"/>
-      <ellipse cx="${tC.x}" cy="${tC.y}" rx="${topRx*0.78}" ry="${topRy*0.78}" fill="#ffffff" stroke="#111" stroke-width="3"/>
-      <ellipse cx="${tC.x}" cy="${tC.y}" rx="${topRx*0.62}" ry="${topRy*0.62}" fill="url(#gWater)" stroke="#111" stroke-width="2" opacity="0.95"/>
-      <ellipse cx="${bC.x}" cy="${bC.y}" rx="${botRx}" ry="${botRy}" fill="none" stroke="#111" stroke-width="3" opacity="0.55"/>
+      <g filter="url(#ds)">
+        <path d="
+          M ${tc.x-topRx} ${tc.y}
+          C ${tc.x-topRx} ${tc.y+topRy} ${tc.x+topRx} ${tc.y+topRy} ${tc.x+topRx} ${tc.y}
+          L ${bc.x+botRx} ${bc.y}
+          C ${bc.x+botRx} ${bc.y+botRy} ${bc.x-botRx} ${bc.y+botRy} ${bc.x-botRx} ${bc.y}
+          Z"
+          fill="url(#gWall)" stroke="#111" stroke-width="3"/>
+        <ellipse cx="${tc.x}" cy="${tc.y}" rx="${topRx}" ry="${topRy}" fill="url(#gSoil)" stroke="#111" stroke-width="3"/>
+        <ellipse cx="${tc.x}" cy="${tc.y}" rx="${topRx*0.78}" ry="${topRy*0.78}" fill="#ffffff" stroke="#111" stroke-width="3"/>
+        <ellipse cx="${tc.x}" cy="${tc.y}" rx="${topRx*0.62}" ry="${topRy*0.62}" fill="url(#gWater)" stroke="#111" stroke-width="2" opacity="0.97"/>
+        <ellipse cx="${bc.x}" cy="${bc.y}" rx="${botRx}" ry="${botRy}" fill="none" stroke="#111" stroke-width="3" opacity="0.55"/>
+      </g>
     `;
 
     const dims = `
-      ${arr(tC.x-topRx, tC.y-85, tC.x+topRx, tC.y-85, "#111", 6)}
-      ${t(tC.x, tC.y-110, "Upper Diameter", 34, 900, "#111", "middle")}
-      ${t(tC.x, tC.y-70, `${fmt(Dtop,2)} m`, 30, 900, "#1f5eff", "middle")}
+      ${dimLine(tc.x-topRx, tc.y-92, tc.x+topRx, tc.y-92, "#2f7dff","arrU",8)}
+      ${tx(tc.x, tc.y-120, "Upper Diameter", 36, 1000, "#111", "middle")}
+      ${tx(tc.x, tc.y-78, `${fmt(Dtop,2)} m`, 34, 1000, "#2f7dff", "middle")}
 
-      ${arr(bC.x-botRx, bC.y+110, bC.x+botRx, bC.y+110, "#111", 6)}
-      ${t(bC.x, bC.y+84, "Lower Diameter", 32, 900, "#111", "middle")}
-      ${t(bC.x, bC.y+128, `${fmt(Dbottom,2)} m`, 28, 900, "#00b86b", "middle")}
+      ${dimLine(bc.x-botRx, bc.y+125, bc.x+botRx, bc.y+125, "#16c784","arrL",8)}
+      ${tx(bc.x, bc.y+98, "Lower Diameter", 34, 1000, "#111", "middle")}
+      ${tx(bc.x, bc.y+142, `${fmt(Dbottom,2)} m`, 32, 1000, "#16c784", "middle")}
 
-      ${arr(tC.x-topRx-160, tC.y+30, tC.x-topRx-160, bC.y-10, "#111", 6)}
-      ${t(tC.x-topRx-160, (tC.y+30+bC.y-10)/2 - 10, "Depth (H)", 34, 900, "#111", "middle")}
-      ${t(tC.x-topRx-160, (tC.y+30+bC.y-10)/2 + 34, `${fmt(H,2)} m`, 30, 900, "#111", "middle")}
+      ${dimLine(tc.x-topRx-175, tc.y+35, tc.x-topRx-175, bc.y-10, "#ff9f1a","arrD",8)}
+      ${tx(tc.x-topRx-175, (tc.y+35+bc.y-10)/2 - 10, "Depth (H)", 36, 1000, "#111", "middle")}
+      ${tx(tc.x-topRx-175, (tc.y+35+bc.y-10)/2 + 34, `${fmt(H,2)} m`, 34, 1000, "#ff9f1a", "middle")}
     `;
 
-    const legend = `
-      ${pill(60,420,420,70,"UPPER DIMENSIONS", "#e9f3ff","#111","#1f5eff")}
-      ${pill(60,505,420,70,"LOWER DIMENSIONS", "#eafff6","#111","#00b86b")}
-    `;
-
-    g.innerHTML = box + legend + model + dims;
+    g.innerHTML = title + info + legend + model + dims;
   }
 
   function safeSketchFromInputs(){
@@ -622,18 +624,14 @@
     const below = Math.max(Number($("belowIL").value), 0.30);
     const fb  = Number($("fb").value);
 
-    if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)){
-      document.getElementById("gDraw").innerHTML = "";
-      return;
-    }
+    const g = document.getElementById("gDraw");
+
+    if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)){ g.innerHTML=""; return; }
 
     const bottom = il - below;
     const maxWL = egl - fb;
     const H = maxWL - bottom;
-    if(!(H>0)){
-      document.getElementById("gDraw").innerHTML = "";
-      return;
-    }
+    if(!(H>0)){ g.innerHTML=""; return; }
 
     const shape = $("shape").value;
 
@@ -641,29 +639,27 @@
       const Ltop = Number($("ltop").value);
       const Wtop = Number($("wtop").value);
       const Z = Number($("z").value);
-      if(!(isFinite(Ltop)&&isFinite(Wtop)&&isFinite(Z))) return;
+      if(!(isFinite(Ltop)&&isFinite(Wtop)&&isFinite(Z))){ g.innerHTML=""; return; }
 
       const Lb = Ltop - 2*Z*H;
       const Wb = Wtop - 2*Z*H;
 
-      drawRectSketchClear({
+      drawRectCatchy({
         egl,maxWL,il,bottom,fb,H,
-        Ltop: isFinite(Ltop)?Ltop:0,
-        Wtop: isFinite(Wtop)?Wtop:0,
-        Lb: isFinite(Lb)?Math.max(Lb,0):0,
-        Wb: isFinite(Wb)?Math.max(Wb,0):0
+        Ltop: Ltop, Wtop: Wtop,
+        Lb: Math.max(Lb,0), Wb: Math.max(Wb,0)
       });
     } else {
       const Dtop = Number($("dtop").value);
       const Z = Number($("zc").value);
-      if(!(isFinite(Dtop)&&isFinite(Z))) return;
+      if(!(isFinite(Dtop)&&isFinite(Z))){ g.innerHTML=""; return; }
 
       const Dbottom = Dtop - 2*Z*H;
 
-      drawCircSketchClear({
+      drawCircCatchy({
         egl,maxWL,il,bottom,fb,H,
-        Dtop: isFinite(Dtop)?Dtop:0,
-        Dbottom: isFinite(Dbottom)?Math.max(Dbottom,0):0
+        Dtop: Dtop,
+        Dbottom: Math.max(Dbottom,0)
       });
     }
   }
@@ -682,7 +678,7 @@
       const bottom = il - below;
       const maxWL  = egl - fb;
       const H = maxWL - bottom;
-      if(!(H>0)) throw new Error("Invalid levels: (EGL - Freeboard) must be above (IL - Depth below IL).");
+      if(!(H>0)) throw new Error("Invalid levels.");
 
       const shape = $("shape").value;
 
@@ -695,14 +691,12 @@
         topL = Number($("ltop").value);
         topW = Number($("wtop").value);
         Z = Number($("z").value);
-        if(!(topL>0 && topW>0 && Z>=0)) throw new Error("Check rectangular upper dimensions and side slope.");
+        if(!(topL>0 && topW>0 && Z>=0)) throw new Error("Check rectangular inputs.");
 
         lowL = topL - 2*Z*H;
         lowW = topW - 2*Z*H;
 
-        if(!(lowL > 0 && lowW > 0)){
-          throw new Error("Increase the pond dimension.");
-        }
+        if(!(lowL > 0 && lowW > 0)) throw new Error("Increase the pond dimension.");
 
         Vtot = pondVolumeRect(lowL, lowW, Z, H);
 
@@ -712,16 +706,14 @@
           Vbelow = pondVolumeRect(lowL, lowW, Z, hUse);
         }
 
-        drawRectSketchClear({egl,maxWL,il,bottom,fb,H, Ltop:topL,Wtop:topW,Lb:lowL,Wb:lowW});
+        drawRectCatchy({egl,maxWL,il,bottom,fb,H,Ltop:topL,Wtop:topW,Lb:lowL,Wb:lowW});
       } else {
         topD = Number($("dtop").value);
         Z = Number($("zc").value);
-        if(!(topD>0 && Z>=0)) throw new Error("Check circular upper diameter and side slope.");
+        if(!(topD>0 && Z>=0)) throw new Error("Check circular inputs.");
 
         lowD = topD - 2*Z*H;
-        if(!(lowD > 0)){
-          throw new Error("Increase the pond dimension.");
-        }
+        if(!(lowD > 0)) throw new Error("Increase the pond dimension.");
 
         const r0 = lowD/2;
         Vtot = pondVolumeCirc(r0, Z, H);
@@ -732,12 +724,11 @@
           Vbelow = pondVolumeCirc(r0, Z, hUse);
         }
 
-        drawCircSketchClear({egl,maxWL,il,bottom,fb,H, Dtop:topD,Dbottom:lowD});
+        drawCircCatchy({egl,maxWL,il,bottom,fb,H,Dtop:topD,Dbottom:lowD});
       }
 
       const Vactive = Math.max(0, Vtot - Vbelow);
 
-      // Required volume
       const mode = $("mode").value;
       let Vreq = 0;
       let note = "";
@@ -760,7 +751,7 @@
         const Tp = Number($("tp").value);
         const Tb = Number($("tb").value);
         const loss = clampPct($("lossPct2").value);
-        if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs (Tb ≥ Tp).");
+        if(!(Qp>=0 && Tp>0 && Tb>0 && Tb>=Tp)) throw new Error("Check inflow inputs.");
 
         Vreq = 0.5 * Qp * (Tb*60);
         Vreq *= (1 - loss/100);
@@ -769,7 +760,7 @@
       else {
         const vuser = Number($("vreqUser").value);
         const loss = clampPct($("lossPct3").value);
-        if(!(vuser>=0)) throw new Error("Enter a valid required volume (m³).");
+        if(!(vuser>=0)) throw new Error("Enter valid required volume.");
 
         Vreq = vuser * (1 - loss/100);
         note = `Direct required volume`;
@@ -777,7 +768,6 @@
 
       const pass = (Vtot >= Vreq);
 
-      // KPIs
       $("kBottom").textContent = fmt(bottom,2);
       $("kMaxWL").textContent  = fmt(maxWL,2);
       $("kDepth").textContent  = fmt(H,2);
