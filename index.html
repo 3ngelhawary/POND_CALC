@@ -335,26 +335,35 @@
       <!-- GRAPH -->
       <div class="card">
         <div class="splitHead">
-          <h2>Graph</h2>
-          <span class="tag">Dimensions vs Elevation</span>
+          <h2>Cross-Section</h2>
+          <span class="tag" id="xsLabel">Longitudinal (Length)</span>
         </div>
 
-        <div class="graphWrap">
-          <canvas id="chartGeom" height="420"></canvas>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button id="btnXsLen"  style="font-size:11px;padding:6px 12px;border-radius:8px;font-weight:700;background:var(--btn)">Length</button>
+          <button id="btnXsWid"  style="font-size:11px;padding:6px 12px;border-radius:8px;font-weight:700;background:var(--btn2)">Width</button>
+          <button id="btnXsDiag" style="font-size:11px;padding:6px 12px;border-radius:8px;font-weight:700;background:var(--btn2)">Diagonal</button>
+        </div>
 
-          <div class="legendRow">
-            <div class="chip"><span class="dot" style="background:var(--berm)"></span> Berm (EGL)</div>
-            <div class="chip"><span class="dot" style="background:var(--wl)"></span> Max WL</div>
-            <div class="chip"><span class="dot" style="background:var(--bottom)"></span> Bottom</div>
-            <div class="chip"><span class="dot" style="background:var(--levels)"></span> Level Lines</div>
-          </div>
+        <div class="graphWrap" style="padding:0;overflow:hidden;position:relative">
+          <svg id="pondXS" width="100%" viewBox="0 0 700 460"
+               style="display:block;font-family:system-ui,Arial;"></svg>
+        </div>
+
+        <div class="legendRow" style="margin-top:10px">
+          <div class="chip"><span class="dot" style="background:#1e3a5f"></span> Native Ground</div>
+          <div class="chip"><span class="dot" style="background:#16c784"></span> Active Storage</div>
+          <div class="chip"><span class="dot" style="background:rgba(180,92,255,.35)"></span> Dead Storage</div>
+          <div class="chip"><span class="dot" style="background:var(--wl)"></span> Max WL</div>
+          <div class="chip"><span class="dot" style="background:var(--levels)"></span> Pipe IL</div>
+          <div class="chip"><span class="dot" style="background:var(--berm)"></span> Berm / EGL</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Chart.js removed: cross-section now uses pure SVG -->
 
 <script>
   const $ = id => document.getElementById(id);
@@ -404,237 +413,296 @@
   }
   function setMsg(txt){ $("msg").textContent = txt; }
 
-  // ---------------- GRAPH ----------------
-  let chartGeom = null;
+  // ---------------- SVG CROSS-SECTION ----------------
+  let xsView = "len"; // "len" | "wid" | "diag"
 
-  function asPoint(x,y){ return {x, y}; }
-
-  function makeHLine(y, xMin, xMax){
-    return [asPoint(xMin,y), asPoint(xMax,y)];
+  function svgEl(tag, attrs, txt){
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+    if(txt !== undefined) el.textContent = txt;
+    return el;
   }
 
-  function buildGraphDataRect(levels, dims){
-    // y = elevation (m), x = dimension (m)
-    const {bottom, il, maxWL, egl} = levels;
-    const {Lb, Wb, Lwl, Wwl, Lberm, Wberm} = dims;
+  function drawXS(){
+    const svg = $("pondXS");
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
 
-    const xMax = Math.max(Lberm, Wberm, Lwl, Wwl, Lb, Wb) * 1.15;
-    const xMin = 0;
-
-    const lenLine = [
-      asPoint(Lb, bottom),
-      asPoint(Lwl, maxWL),
-      asPoint(Lberm, egl),
-    ];
-    const widLine = [
-      asPoint(Wb, bottom),
-      asPoint(Wwl, maxWL),
-      asPoint(Wberm, egl),
-    ];
-
-    const lvlIL   = makeHLine(il, xMin, xMax);
-    const lvlMax  = makeHLine(maxWL, xMin, xMax);
-    const lvlEGL  = makeHLine(egl, xMin, xMax);
-    const lvlBot  = makeHLine(bottom, xMin, xMax);
-
-    return {xMin,xMax, lenLine, widLine, lvlIL, lvlMax, lvlEGL, lvlBot};
-  }
-
-  function buildGraphDataCirc(levels, dims){
-    const {bottom, il, maxWL, egl} = levels;
-    const {Db, Dwl, Dberm} = dims;
-
-    const xMax = Math.max(Dberm, Dwl, Db) * 1.20;
-    const xMin = 0;
-
-    const diaLine = [
-      asPoint(Db, bottom),
-      asPoint(Dwl, maxWL),
-      asPoint(Dberm, egl),
-    ];
-
-    const lvlIL   = makeHLine(il, xMin, xMax);
-    const lvlMax  = makeHLine(maxWL, xMin, xMax);
-    const lvlEGL  = makeHLine(egl, xMin, xMax);
-    const lvlBot  = makeHLine(bottom, xMin, xMax);
-
-    return {xMin,xMax, diaLine, lvlIL, lvlMax, lvlEGL, lvlBot};
-  }
-
-  function ensureChart(){
-    const ctx = $("chartGeom").getContext("2d");
-    if(chartGeom) return;
-
-    chartGeom = new Chart(ctx, {
-      type: "scatter",
-      data: { datasets: [] },
-      options: {
-        responsive: true,
-        animation: false,
-        parsing: false,
-        plugins: {
-          legend: { labels: { color: "#e7eefc", font: { size: 14, weight: "700" } } },
-          tooltip: {
-            callbacks: {
-              label: (c) => {
-                const x = c.raw?.x, y = c.raw?.y;
-                return `${c.dataset.label}: ${fmt(x,2)} m @ Elev ${fmt(y,2)} m`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            title: { display: true, text: "Dimension (m)", color: "#a8b7d6", font: { size: 14, weight:"800" } },
-            ticks: { color: "#a8b7d6" },
-            grid: { color: "rgba(38,54,87,.35)" }
-          },
-          y: {
-            title: { display: true, text: "Elevation (m)", color: "#a8b7d6", font: { size: 14, weight:"800" } },
-            ticks: { color: "#a8b7d6" },
-            grid: { color: "rgba(38,54,87,.35)" }
-          }
-        }
-      }
-    });
-  }
-
-  function setChartRange(xMin, xMax, yMin, yMax){
-    chartGeom.options.scales.x.min = xMin;
-    chartGeom.options.scales.x.max = xMax;
-    chartGeom.options.scales.y.min = yMin;
-    chartGeom.options.scales.y.max = yMax;
-  }
-
-  function updateChartDatasets(datasets){
-    chartGeom.data.datasets = datasets;
-    chartGeom.update();
-  }
-
-  function updateGraphFromInputs(){
     try{
-      ensureChart();
-
-      const egl = Number($("egl").value);
-      const il  = Number($("il").value);
+      const egl   = Number($(  "egl").value);
+      const il    = Number($(   "il").value);
       const below = Math.max(Number($("belowIL").value), 0.30);
-      const fb  = Number($("fb").value);
-
-      if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)) throw new Error("bad");
+      const fb    = Number($(   "fb").value);
+      if(!isFinite(egl)||!isFinite(il)||!isFinite(below)||!isFinite(fb)) throw 0;
 
       const bottom = il - below;
-      const maxWL = egl - fb;
+      const maxWL  = egl - fb;
+      const H_EGL  = egl - bottom;
+      const H_WL   = maxWL - bottom;
+      if(!(H_EGL > 0 && H_WL > 0)) throw 0;
 
-      const H_EGL = egl - bottom;
-      const H_WL  = maxWL - bottom;
-      if(!(H_EGL>0 && H_WL>0 && H_EGL>=H_WL)) throw new Error("bad");
+      const shape  = $("shape").value;
 
-      const yMin = bottom - 0.15*(egl-bottom);
-      const yMax = egl + 0.10*(egl-bottom);
-
-      const shape = $("shape").value;
+      let halfBot, halfWL, halfEGL, label1, label2;
 
       if(shape === "rect"){
         const Lberm = Number($("ltop").value);
         const Wberm = Number($("wtop").value);
-        const Z = Number($("z").value);
-        if(!(Lberm>0 && Wberm>0 && Z>=0)) throw new Error("bad");
-
+        const Z     = Number($(  "z").value);
+        if(!(Lberm>0 && Wberm>0 && Z>=0)) throw 0;
         const Lb = Lberm - 2*Z*H_EGL;
         const Wb = Wberm - 2*Z*H_EGL;
-        if(!(Lb>0 && Wb>0)) throw new Error("dim");
+        if(!(Lb>0 && Wb>0)) throw 0;
 
-        const Lwl = Lb + 2*Z*H_WL;
-        const Wwl = Wb + 2*Z*H_WL;
-
-        const gd = buildGraphDataRect(
-          {bottom, il, maxWL, egl},
-          {Lb,Wb,Lwl,Wwl,Lberm,Wberm}
-        );
-
-        setChartRange(gd.xMin, gd.xMax, yMin, yMax);
-
-        updateChartDatasets([
-          {
-            label: "Length",
-            data: gd.lenLine,
-            showLine: true,
-            borderWidth: 5,
-            pointRadius: 6
-          },
-          {
-            label: "Width",
-            data: gd.widLine,
-            showLine: true,
-            borderWidth: 5,
-            pointRadius: 6
-          },
-          { label: "EGL (Berm)", data: gd.lvlEGL, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "Max WL",      data: gd.lvlMax, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "IL",          data: gd.lvlIL,  showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "Bottom",      data: gd.lvlBot, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-        ]);
-
-        // force colors (Chart.js default colors are fine, but we want strong)
-        chartGeom.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--berm").trim();
-        chartGeom.data.datasets[0].backgroundColor = chartGeom.data.datasets[0].borderColor;
-
-        chartGeom.data.datasets[1].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--wl").trim();
-        chartGeom.data.datasets[1].backgroundColor = chartGeom.data.datasets[1].borderColor;
-
-        const lvlCol = getComputedStyle(document.documentElement).getPropertyValue("--levels").trim();
-        for(let i=2;i<6;i++){
-          chartGeom.data.datasets[i].borderColor = lvlCol;
+        let topDim, botDim;
+        if(xsView === "len"){
+          topDim = Lberm; botDim = Lb;
+          label1 = "Berm L = " + Lberm.toFixed(1) + " m";
+          label2 = "Bot L = " + Lb.toFixed(1) + " m";
+          $("xsLabel").textContent = "Longitudinal (Length)";
+        } else if(xsView === "wid"){
+          topDim = Wberm; botDim = Wb;
+          label1 = "Berm W = " + Wberm.toFixed(1) + " m";
+          label2 = "Bot W = " + Wb.toFixed(1) + " m";
+          $("xsLabel").textContent = "Transverse (Width)";
+        } else {
+          topDim = Math.sqrt(Lberm*Lberm + Wberm*Wberm);
+          botDim = Math.sqrt(Lb*Lb + Wb*Wb);
+          label1 = "Diag = " + topDim.toFixed(1) + " m";
+          label2 = "Bot Diag = " + botDim.toFixed(1) + " m";
+          $("xsLabel").textContent = "Diagonal";
         }
-        chartGeom.update();
+        halfBot = botDim / 2;
+        halfWL  = halfBot + Z * H_WL;
+        halfEGL = topDim / 2;
+
       } else {
         const Dberm = Number($("dtop").value);
-        const Z = Number($("zc").value);
-        if(!(Dberm>0 && Z>=0)) throw new Error("bad");
-
+        const Z     = Number($( "zc").value);
+        if(!(Dberm>0 && Z>=0)) throw 0;
         const Db = Dberm - 2*Z*H_EGL;
-        if(!(Db>0)) throw new Error("dim");
-
-        const Dwl = Db + 2*Z*H_WL;
-
-        const gd = buildGraphDataCirc(
-          {bottom, il, maxWL, egl},
-          {Db, Dwl, Dberm}
-        );
-
-        setChartRange(gd.xMin, gd.xMax, yMin, yMax);
-
-        updateChartDatasets([
-          {
-            label: "Diameter",
-            data: gd.diaLine,
-            showLine: true,
-            borderWidth: 5,
-            pointRadius: 6
-          },
-          { label: "EGL (Berm)", data: gd.lvlEGL, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "Max WL",      data: gd.lvlMax, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "IL",          data: gd.lvlIL,  showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-          { label: "Bottom",      data: gd.lvlBot, showLine:true, borderWidth:4, pointRadius:0, borderDash:[10,8] },
-        ]);
-
-        chartGeom.data.datasets[0].borderColor = getComputedStyle(document.documentElement).getPropertyValue("--berm").trim();
-        chartGeom.data.datasets[0].backgroundColor = chartGeom.data.datasets[0].borderColor;
-
-        const lvlCol = getComputedStyle(document.documentElement).getPropertyValue("--levels").trim();
-        for(let i=1;i<5;i++){
-          chartGeom.data.datasets[i].borderColor = lvlCol;
-        }
-        chartGeom.update();
+        if(!(Db>0)) throw 0;
+        halfBot = Db / 2;
+        halfWL  = halfBot + Z * H_WL;
+        halfEGL = Dberm / 2;
+        label1  = "Berm Dia = " + Dberm.toFixed(1) + " m";
+        label2  = "Bot Dia = " + Db.toFixed(1) + " m";
+        $("xsLabel").textContent = "Cross-Section (Circular)";
+        // disable width/diag buttons for circular
       }
+
+      // ---- SVG coordinate mapping ----
+      const VB_W = 700, VB_H = 460;
+      const PAD_L = 68, PAD_R = 115, PAD_T = 32, PAD_B = 54;
+      const plotW = VB_W - PAD_L - PAD_R;
+      const plotH = VB_H - PAD_T - PAD_B;
+
+      const pad     = H_EGL * 0.16;
+      const elvMin  = bottom - pad;
+      const elvMax  = egl   + H_EGL * 0.14;
+      const elvSpan = elvMax - elvMin;
+      const hwMax   = halfEGL * 1.28;
+
+      function ex(hw){  return PAD_L + plotW/2 + (hw / hwMax) * (plotW/2); }
+      function exL(hw){ return PAD_L + plotW/2 - (hw / hwMax) * (plotW/2); }
+      function ey(elv){ return PAD_T + plotH * (1 - (elv - elvMin) / elvSpan); }
+
+      // ---- DEFS ----
+      const defs = svgEl("defs",{});
+
+      const wg = svgEl("linearGradient",{id:"wGrad",x1:"0",y1:"0",x2:"0",y2:"1"});
+      wg.appendChild(svgEl("stop",{offset:"0%",   "stop-color":"#16c784","stop-opacity":"0.60"}));
+      wg.appendChild(svgEl("stop",{offset:"100%", "stop-color":"#16c784","stop-opacity":"0.18"}));
+      defs.appendChild(wg);
+
+      const dg = svgEl("linearGradient",{id:"dGrad",x1:"0",y1:"0",x2:"0",y2:"1"});
+      dg.appendChild(svgEl("stop",{offset:"0%",   "stop-color":"#b45cff","stop-opacity":"0.35"}));
+      dg.appendChild(svgEl("stop",{offset:"100%", "stop-color":"#b45cff","stop-opacity":"0.10"}));
+      defs.appendChild(dg);
+
+      const eg = svgEl("linearGradient",{id:"eGrad",x1:"0",y1:"0",x2:"0",y2:"1"});
+      eg.appendChild(svgEl("stop",{offset:"0%",   "stop-color":"#1e3a5f","stop-opacity":"1"}));
+      eg.appendChild(svgEl("stop",{offset:"100%", "stop-color":"#0d2040","stop-opacity":"1"}));
+      defs.appendChild(eg);
+
+      const fbg = svgEl("linearGradient",{id:"fbGrad",x1:"0",y1:"0",x2:"0",y2:"1"});
+      fbg.appendChild(svgEl("stop",{offset:"0%",   "stop-color":"#2f7dff","stop-opacity":"0.12"}));
+      fbg.appendChild(svgEl("stop",{offset:"100%", "stop-color":"#2f7dff","stop-opacity":"0.03"}));
+      defs.appendChild(fbg);
+
+      svg.appendChild(defs);
+
+      // ---- background ----
+      svg.appendChild(svgEl("rect",{x:0,y:0,width:VB_W,height:VB_H,fill:"#070c16",rx:"12"}));
+
+      // ---- grid lines ----
+      const nGrid = 6;
+      for(let i=0;i<=nGrid;i++){
+        const elv = elvMin + elvSpan * i / nGrid;
+        const sy  = ey(elv);
+        svg.appendChild(svgEl("line",{x1:PAD_L,y1:sy,x2:PAD_L+plotW,y2:sy,
+          stroke:"rgba(38,54,87,.30)","stroke-width":"1"}));
+        svg.appendChild(svgEl("text",{x:PAD_L-5,y:sy+4,
+          "text-anchor":"end",fill:"#a8b7d6","font-size":"11"},elv.toFixed(2)));
+      }
+
+      // ---- EARTH banks ----
+      const toPath = pts => "M"+pts.map(p=>p[0]+","+p[1]).join(" L")+" Z";
+
+      svg.appendChild(svgEl("path",{
+        d:toPath([[PAD_L,ey(egl)],[exL(halfEGL),ey(egl)],[exL(halfBot),ey(bottom)],[PAD_L,ey(bottom)]]),
+        fill:"url(#eGrad)",opacity:"0.95"}));
+      svg.appendChild(svgEl("path",{
+        d:toPath([[ex(halfEGL),ey(egl)],[PAD_L+plotW,ey(egl)],[PAD_L+plotW,ey(bottom)],[ex(halfBot),ey(bottom)]]),
+        fill:"url(#eGrad)",opacity:"0.95"}));
+
+      // ---- hatching on banks (engineering convention) ----
+      const hatchGrp = svgEl("g",{"clip-path":"none",opacity:"0.18"});
+      const hStep = 12;
+      for(let hx = PAD_L - 20; hx < PAD_L + plotW + 20; hx += hStep){
+        hatchGrp.appendChild(svgEl("line",{
+          x1:hx, y1:ey(egl)-4, x2:hx+16, y2:ey(bottom)+4,
+          stroke:"#7ab3ff","stroke-width":"1"}));
+      }
+      svg.appendChild(hatchGrp);
+
+      // ---- DEAD STORAGE ----
+      const ilFrac  = Math.min(1, below / H_EGL);
+      const ilHW    = halfBot + (halfEGL - halfBot) * ilFrac;
+      svg.appendChild(svgEl("path",{
+        d:toPath([[exL(halfBot),ey(bottom)],[exL(ilHW),ey(il)],[ex(ilHW),ey(il)],[ex(halfBot),ey(bottom)]]),
+        fill:"url(#dGrad)"}));
+
+      // ---- ACTIVE STORAGE (IL -> maxWL) ----
+      const wlFrac  = Math.min(1, H_WL / H_EGL);
+      const wlHW    = halfBot + (halfEGL - halfBot) * wlFrac;
+      svg.appendChild(svgEl("path",{
+        d:toPath([[exL(ilHW),ey(il)],[exL(wlHW),ey(maxWL)],[ex(wlHW),ey(maxWL)],[ex(ilHW),ey(il)]]),
+        fill:"url(#wGrad)"}));
+
+      // water surface shimmer lines
+      for(let sh=0;sh<3;sh++){
+        const wy = ey(maxWL) + sh*3 + 2;
+        svg.appendChild(svgEl("line",{
+          x1:exL(wlHW)+8+sh*4, y1:wy, x2:ex(wlHW)-8-sh*4, y2:wy,
+          stroke:"rgba(22,199,132,0.25)","stroke-width":"1.2"}));
+      }
+
+      // ---- FREEBOARD ZONE ----
+      svg.appendChild(svgEl("path",{
+        d:toPath([[exL(wlHW),ey(maxWL)],[exL(halfEGL),ey(egl)],[ex(halfEGL),ey(egl)],[ex(wlHW),ey(maxWL)]]),
+        fill:"url(#fbGrad)"}));
+
+      // ---- POND WALL OUTLINE ----
+      svg.appendChild(svgEl("path",{
+        d:"M"+exL(halfEGL)+","+ey(egl)+" L"+exL(halfBot)+","+ey(bottom)+" L"+ex(halfBot)+","+ey(bottom)+" L"+ex(halfEGL)+","+ey(egl),
+        fill:"none",stroke:"#2f7dff","stroke-width":"2.8","stroke-linejoin":"round"}));
+      // bottom
+      svg.appendChild(svgEl("line",{
+        x1:exL(halfBot),y1:ey(bottom),x2:ex(halfBot),y2:ey(bottom),
+        stroke:"#2f7dff","stroke-width":"2.8"}));
+
+      // ---- LEVEL LINES ----
+      // EGL
+      svg.appendChild(svgEl("line",{x1:PAD_L,y1:ey(egl),x2:PAD_L+plotW,y2:ey(egl),
+        stroke:"#2f7dff","stroke-width":"1.5","stroke-dasharray":"12,6",opacity:"0.65"}));
+      // Max WL
+      svg.appendChild(svgEl("line",{x1:exL(wlHW)-2,y1:ey(maxWL),x2:ex(wlHW)+2,y2:ey(maxWL),
+        stroke:"#b45cff","stroke-width":"2","stroke-dasharray":"8,5"}));
+      // IL
+      svg.appendChild(svgEl("line",{x1:exL(ilHW)-4,y1:ey(il),x2:ex(ilHW)+4,y2:ey(il),
+        stroke:"#ff9f1a","stroke-width":"1.8","stroke-dasharray":"6,4"}));
+
+      // ---- PIPE SYMBOL ----
+      const pipeR = 7;
+      const pipeCX = PAD_L + plotW/2;
+      svg.appendChild(svgEl("circle",{cx:pipeCX,cy:ey(il),r:pipeR,
+        fill:"#0b1428",stroke:"#ff9f1a","stroke-width":"2"}));
+      svg.appendChild(svgEl("circle",{cx:pipeCX,cy:ey(il),r:2.5,fill:"#ff9f1a"}));
+
+      // ---- RIGHT ANNOTATION COLUMN ----
+      const aX = PAD_L + plotW + 14;
+
+      // total depth brace
+      const bracePts = [[aX+2,ey(egl)],[aX+6,ey(egl)],[aX+6,ey(bottom)],[aX+2,ey(bottom)]];
+      svg.appendChild(svgEl("path",{d:"M"+bracePts[0].join(",")+" L"+bracePts[1].join(",")+" L"+bracePts[2].join(",")+" L"+bracePts[3].join(","),
+        fill:"none",stroke:"#a8b7d6","stroke-width":"1.2"}));
+      svg.appendChild(svgEl("text",{
+        x:aX+10, y:(ey(egl)+ey(bottom))/2+4,
+        "text-anchor":"start",fill:"#e7eefc","font-size":"11","font-weight":"700"},
+        "D="+H_EGL.toFixed(2)+"m"));
+
+      // freeboard mini-brace
+      if(fb > 0.01){
+        svg.appendChild(svgEl("line",{x1:aX-14,y1:ey(egl),x2:aX-14,y2:ey(maxWL),
+          stroke:"#2f7dff","stroke-width":"1.2","stroke-dasharray":"3,3"}));
+        svg.appendChild(svgEl("line",{x1:aX-18,y1:ey(egl),x2:aX-10,y2:ey(egl),stroke:"#2f7dff","stroke-width":"1.2"}));
+        svg.appendChild(svgEl("line",{x1:aX-18,y1:ey(maxWL),x2:aX-10,y2:ey(maxWL),stroke:"#2f7dff","stroke-width":"1.2"}));
+        svg.appendChild(svgEl("text",{
+          x:aX-16, y:(ey(egl)+ey(maxWL))/2+4,
+          "text-anchor":"end",fill:"#2f7dff","font-size":"10","font-weight":"700"},
+          "FB="+fb.toFixed(2)+"m"));
+      }
+
+      // ---- ELEVATION LABELS (right side) ----
+      function lvlLabel(elv, txt, color, offY){
+        const y = ey(elv) + (offY||0);
+        svg.appendChild(svgEl("text",{
+          x:PAD_L+plotW-4, y:y-5,
+          "text-anchor":"end",fill:color,"font-size":"10.5","font-weight":"700"},txt));
+      }
+      lvlLabel(egl,    "EGL "+egl.toFixed(2)+"m",    "#2f7dff");
+      lvlLabel(maxWL,  "MaxWL "+maxWL.toFixed(2)+"m","#b45cff", 13);
+      lvlLabel(il,     "IL "+il.toFixed(2)+"m",       "#ff9f1a");
+      lvlLabel(bottom, "Bot "+bottom.toFixed(2)+"m",  "#64748b", 14);
+
+      // ---- BOTTOM WIDTH LABEL ----
+      const bwY = ey(bottom) + 22;
+      svg.appendChild(svgEl("line",{x1:exL(halfBot),y1:bwY,x2:ex(halfBot),y2:bwY,stroke:"#16c784","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("line",{x1:exL(halfBot),y1:bwY-4,x2:exL(halfBot),y2:bwY+4,stroke:"#16c784","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("line",{x1:ex(halfBot), y1:bwY-4,x2:ex(halfBot), y2:bwY+4,stroke:"#16c784","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("text",{
+        x:PAD_L+plotW/2, y:bwY+14,
+        "text-anchor":"middle",fill:"#16c784","font-size":"11","font-weight":"700"},label2));
+
+      // ---- TOP WIDTH LABEL ----
+      const twY = ey(egl) - 16;
+      svg.appendChild(svgEl("line",{x1:exL(halfEGL),y1:twY,x2:ex(halfEGL),y2:twY,stroke:"#2f7dff","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("line",{x1:exL(halfEGL),y1:twY-4,x2:exL(halfEGL),y2:twY+4,stroke:"#2f7dff","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("line",{x1:ex(halfEGL), y1:twY-4,x2:ex(halfEGL), y2:twY+4,stroke:"#2f7dff","stroke-width":"1.5"}));
+      svg.appendChild(svgEl("text",{
+        x:PAD_L+plotW/2, y:twY-6,
+        "text-anchor":"middle",fill:"#2f7dff","font-size":"11","font-weight":"700"},label1));
+
+      // ---- SIDE SLOPE LABEL ----
+      const slopeZ = halfEGL > halfBot ? (halfEGL - halfBot) / H_EGL : 0;
+      if(slopeZ > 0.05){
+        const slopeStr = slopeZ.toFixed(1)+":1";
+        svg.appendChild(svgEl("text",{
+          x:exL(halfBot)-6, y:(ey(egl)+ey(bottom))/2,
+          "text-anchor":"end",fill:"#a8b7d6","font-size":"10.5","font-style":"italic"},slopeStr));
+        svg.appendChild(svgEl("text",{
+          x:ex(halfBot)+6,  y:(ey(egl)+ey(bottom))/2,
+          "text-anchor":"start",fill:"#a8b7d6","font-size":"10.5","font-style":"italic"},slopeStr));
+      }
+
+      // ---- Y-AXIS TITLE ----
+      svg.appendChild(svgEl("text",{
+        x:13, y:PAD_T+plotH/2,
+        "text-anchor":"middle",fill:"#a8b7d6","font-size":"12","font-weight":"700",
+        transform:"rotate(-90,13,"+(PAD_T+plotH/2)+")"},"Elevation (m)"));
 
     } catch(e){
-      if(chartGeom){
-        chartGeom.data.datasets = [];
-        chartGeom.update();
-      }
+      const svg = $("pondXS");
+      while(svg.firstChild) svg.removeChild(svg.firstChild);
+      svg.appendChild(svgEl("rect",{x:0,y:0,width:700,height:460,fill:"#070c16",rx:"12"}));
+      svg.appendChild(svgEl("text",{
+        x:350,y:240,"text-anchor":"middle",fill:"#a8b7d6","font-size":"14"
+      },"Enter valid inputs to see cross-section."));
     }
   }
+
+  function updateGraphFromInputs(){ drawXS(); }
+
 
   // ---------------- CALC ----------------
   function calc(){
@@ -738,7 +806,7 @@
         Vreq = vuser * (1 - loss/100);
       }
 
-      const pass = (Vtot >= Vreq);
+      const pass = (Vactive >= Vreq);
 
       // KPIs
       $("kBottom").textContent = fmt(bottom,2);
@@ -766,10 +834,10 @@
       setPassColor(pass);
 
       if(pass){
-        setMsg("PASS: Pond storage at max WL is ≥ required volume.");
+        setMsg(`PASS: Active storage (IL → Max WL) of ${fmt(Vactive,0)} m³ ≥ required ${fmt(Vreq,0)} m³.`);
         setStatus(true, "PASS");
       } else {
-        setMsg("FAIL: Increase pond size/depth or revise assumptions.");
+        setMsg(`FAIL: Active storage (IL → Max WL) of ${fmt(Vactive,0)} m³ < required ${fmt(Vreq,0)} m³. Increase pond size/depth.`);
         setStatus(false, "FAIL");
       }
 
@@ -831,6 +899,18 @@
   $("shape").addEventListener("change", toggleShape);
   $("run").addEventListener("click", calc);
   $("btnReset").addEventListener("click", resetExample);
+
+  // cross-section view toggle
+  function setXsView(v){
+    xsView = v;
+    $("btnXsLen").style.background  = v==="len"  ? "var(--btn)" : "var(--btn2)";
+    $("btnXsWid").style.background  = v==="wid"  ? "var(--btn)" : "var(--btn2)";
+    $("btnXsDiag").style.background = v==="diag" ? "var(--btn)" : "var(--btn2)";
+    drawXS();
+  }
+  $("btnXsLen").addEventListener("click",  ()=>setXsView("len"));
+  $("btnXsWid").addEventListener("click",  ()=>setXsView("wid"));
+  $("btnXsDiag").addEventListener("click", ()=>setXsView("diag"));
 
   toggleMode();
   toggleShape();
